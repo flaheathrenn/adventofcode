@@ -1,35 +1,28 @@
 package day2;
 
-import java.io.BufferedReader;
-import java.io.FileReader;
-import java.io.IOException;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import global.InputProcessor;
+
 public class day2 {
     public static void main(String[] args) {
-        final String filename = "src/day2/input.txt";
-        try (BufferedReader inputFileReader = new BufferedReader(new FileReader(filename))) {
-            Bag bag = new Bag(12, 13, 14);
-            int idsAcc = 0;
-            int powerAcc = 0;
-            for (String inputLine = inputFileReader.readLine(); inputLine != null; inputLine = inputFileReader.readLine()) {
-                ParsedLine parsedLine = parseLine(inputLine);
-                if (bag.canContain(parsedLine.bag())) {
-                    idsAcc += parsedLine.lineId();
-                }
-                powerAcc += parsedLine.bag().power();
+        Bag limitingBag = new Bag(12, 13, 14);
+        InputProcessor processor = new InputProcessor("src/day2/input.txt");
+        RunningTotals finalTotals = processor.processLines(day2::parseLine, (parsedLine, runningTotals) -> {
+            if (limitingBag.canContain(parsedLine.bag())) {
+                runningTotals.idsAccumulator += parsedLine.lineId();
             }
-            System.out.println("Sum of all valid line IDs:");
-            System.out.println(idsAcc);
-            System.out.println("Sum of all minimum bag powers:");
-            System.out.println(powerAcc);
-            System.exit(0);
-        } catch (IOException e) {
-            System.err.println("Exception reading file " + filename + ":");
-            e.printStackTrace();
-            System.exit(1);
-        }
+            runningTotals.powerAccumulator += parsedLine.bag().power();
+            return runningTotals;
+        }, new RunningTotals());
+        System.out.println("Star 1 solution: " + finalTotals.idsAccumulator);
+        System.out.println("Star 2 solution: " + finalTotals.powerAccumulator);
+    }
+
+    private static class RunningTotals {
+        int idsAccumulator = 0;
+        int powerAccumulator = 0;
     }
 
     private static ParsedLine parseLine(String inputLine) {
