@@ -13,7 +13,7 @@ public class ParsedLineSymbolLocations {
     // Parsing
     public ParsedLineSymbolLocations(String line) {
         this.symbolLocations = new HashSet<>();
-        Matcher symbolMatcher = Pattern.compile("[^\\.\\d]").matcher(line);
+        Matcher symbolMatcher = Pattern.compile("\\*").matcher(line);
         while (symbolMatcher.find()) {
             symbolLocations.add(symbolMatcher.start() + 1); // convert zero-index to one-index
         }
