@@ -10,7 +10,7 @@ public class ParsedLine {
     String left;
     String right;
 
-    private static Pattern pattern = Pattern.compile("([A-Z]+) = \\(([A-Z]+), ([A-Z]+)\\)");
+    private static Pattern pattern = Pattern.compile("([A-Z0-9]+) = \\(([A-Z0-9]+), ([A-Z0-9]+)\\)");
 
     // Parsing
     public ParsedLine(String line) {
