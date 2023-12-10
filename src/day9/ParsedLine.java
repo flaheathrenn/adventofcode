@@ -16,6 +16,7 @@ public class ParsedLine {
 
     // Parsing
     public ParsedLine(String line) {
+        // For reasons I don't understand, a - right at the start of a line doesn't get matched
         Matcher matcher = INT_PATTERN.matcher(" " + line);
         matcher.matches();
         while (matcher.find()) {
