@@ -8,7 +8,7 @@ public class Accumulator {
     // Update state from parsed line
     public Accumulator update(ParsedLine parsedLine) {
         acc += parsedLine.combinations;
-        System.out.println("Processed line " + lineNumber++);
+        // System.out.println("Processed line " + lineNumber++);
         return this;
     }
 
