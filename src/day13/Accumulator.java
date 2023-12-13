@@ -4,7 +4,8 @@ import java.util.Arrays;
 
 public class Accumulator {
     // State
-    long acc;
+    long accStar1 = 0L;
+    long accStar2 = 0L;
     int currentPatternLine = 0;
     String[][] currentPattern;
 
@@ -13,7 +14,8 @@ public class Accumulator {
         if (parsedLine.empty) {
             String[][] trimmedCurrentPattern = new String[currentPatternLine][currentPattern[0].length];
             System.arraycopy(currentPattern, 0, trimmedCurrentPattern, 0, currentPatternLine);
-            acc += processPattern(trimmedCurrentPattern);
+            accStar1 += processPattern(trimmedCurrentPattern, 0L); // Star 1
+            accStar2 += processPatternStar2(trimmedCurrentPattern); // Star 2 result
             currentPattern = null;
             currentPatternLine = 0;
         } else if (currentPattern == null) {
@@ -27,24 +29,56 @@ public class Accumulator {
         return this;
     }
 
-    private long processPattern(String[][] pattern) {
-
-        // Print memory contents for debugging purposes
+    private long processPatternStar2(String[][] pattern) {
+        long initialResult = processPattern(pattern, 0L);
         for (int i = 0; i < pattern.length; i++) {
             for (int j = 0; j < pattern[i].length; j++) {
-                System.out.print(pattern[i][j]);
+                // treat as smudge and flip
+                if (pattern[i][j].equals("#")) {
+                    pattern[i][j] = ".";
+                } else {
+                    pattern[i][j] = "#";
+                }
+
+                long newResult = processPattern(pattern, initialResult);
+                if (newResult != 0 && newResult != initialResult) {
+                    // System.out.println("Found smudge at (" + (i+1) + "," + (j+1) + "), new result " + newResult);
+                    return newResult;
+                }
+
+                // flip back
+                if (pattern[i][j].equals("#")) {
+                    pattern[i][j] = ".";
+                } else {
+                    pattern[i][j] = "#";
+                }
             }
-            System.out.println();
         }
-        System.out.println();
+        System.out.println("Couldn't find smudge");
+        return 0L;
+    }
+
+    private long processPattern(String[][] pattern, long exclude) {
+
+        // Print memory contents for debugging purposes
+        // for (int i = 0; i < pattern.length; i++) {
+        //     for (int j = 0; j < pattern[i].length; j++) {
+        //         System.out.print(pattern[i][j]);
+        //     }
+        //     System.out.println();
+        // }
+        // System.out.println();
 
         // If two consecutive horizontal lines are identical, check for a reflection
         // i is zero-indexed but actual line numbers are one-indexed
         for (int i = 0; i < pattern.length - 1; i++) {
             if (Arrays.equals(pattern[i], pattern[i + 1])) {
-                System.out.println("Horizontal lines " + (i + 1) + " and " + (i + 2) + " match, checking for reflection...");
+                // System.out.println("Horizontal lines " + (i + 1) + " and " + (i + 2) + " match, checking for reflection...");
                 if (checkReflection(pattern, i)) {
-                    System.out.println("Horizontal reflection found after line " + (i + 1));
+                    // System.out.println("Horizontal reflection found after line " + (i + 1));
+                    if ((i + 1) * 100 == exclude) {
+                        continue;
+                    }
                     return (i + 1) * 100; // times 100 for horizontal
                 }
             }
@@ -55,14 +89,17 @@ public class Accumulator {
         // Now the same process again will find a vertical reflection
         for (int i = 0; i < pattern.length - 1; i++) {
             if (Arrays.equals(pattern[i], pattern[i + 1])) {
-                System.out.println("Vertical lines " + (i + 1) + " and " + (i + 2) + " match, checking for reflection...");
+                // System.out.println("Vertical lines " + (i + 1) + " and " + (i + 2) + " match, checking for reflection...");
                 if (checkReflection(pattern, i)) {
-                    System.out.println("Vertical reflection found after line " + (i + 1));
+                    // System.out.println("Vertical reflection found after line " + (i + 1));
+                    if (i + 1 == exclude) {
+                        continue;
+                    }
                     return (i + 1);
                 }
             }
         }
-        System.out.println("No reflection found");
+        // System.out.println("No reflection found");
         return 0;
     }
 
@@ -83,8 +120,8 @@ public class Accumulator {
             if (!Arrays.equals(pattern[topLineIndex], pattern[bottomLineIndex])) {
                 // note that our array indices are zero-indexed but actual output should be
                 // one-indexed
-                System.out.println(
-                        "Line " + (topLineIndex + 1) + " doesn't match line " + (bottomLineIndex + 1) + ", aborting");
+                // System.out.println(
+                //         "Line " + (topLineIndex + 1) + " doesn't match line " + (bottomLineIndex + 1) + ", aborting");
                 return false;
             }
             topLineIndex--;
@@ -109,6 +146,10 @@ public class Accumulator {
 
     // Extract solution
     public String star1() {
-        return String.valueOf(acc);
+        return String.valueOf(accStar1);
+    }
+
+    public String star2() {
+        return String.valueOf(accStar2);
     }
 }
