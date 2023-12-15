@@ -6,7 +6,7 @@ public class Accumulator {
 
     // Update state from parsed line
     public Accumulator update(ParsedLine parsedLine) {
-        acc = parsedLine.acc;
+        acc = parsedLine.totalFocusingPower;
         return this;
     }
 
