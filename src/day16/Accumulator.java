@@ -15,16 +15,20 @@ public class Accumulator {
 
     // Extract solution
     public String star1() {
-        String[][] grid = gridRows.toArray(new String[gridRows.size()][gridRows.get(0).length]);
+        final String[][] grid = gridRows.toArray(new String[gridRows.size()][gridRows.get(0).length]);
 
         // print for debugging
-        for (int rowIndex = 0; rowIndex < grid.length; rowIndex++) {
-            for (int columnIndex = 0; columnIndex < grid[rowIndex].length; columnIndex++) {
-                System.out.print(grid[rowIndex][columnIndex]);
-            }
-            System.out.println();
-        }
+        // for (int rowIndex = 0; rowIndex < grid.length; rowIndex++) {
+        //     for (int columnIndex = 0; columnIndex < grid[rowIndex].length; columnIndex++) {
+        //         System.out.print(grid[rowIndex][columnIndex]);
+        //     }
+        //     System.out.println();
+        // }
 
+        return String.valueOf(calculateEnergisation(grid, new GridCoordinate(0, 0), Direction.RIGHT));
+    }
+
+    private int calculateEnergisation(String[][] grid, GridCoordinate beamLocation, Direction beamDirection) {
         // Create a square array of bytes
         // The last four bits of the byte represent beams passing through a grid square
         // [up][left][down][right]
@@ -36,47 +40,64 @@ public class Accumulator {
         // even though beams have exited it up and down.
         byte[][] gridEnergisation = new byte[grid.length][grid[0].length];
 
-        int initialBeamRow = 0;
-        int initialBeamColumn = 0;
-        Direction initialBeamDirection = Direction.RIGHT;
-
-        energiseGridWithBeam(grid, gridEnergisation, new GridCoordinate(initialBeamRow, initialBeamColumn),
-                initialBeamDirection);
+        energiseGridWithBeam(grid, gridEnergisation, beamLocation, beamDirection);
 
         // print for debugging: beam path
-        System.out.println();
-        for (int rowIndex = 0; rowIndex < gridEnergisation.length; rowIndex++) {
-            for (int columnIndex = 0; columnIndex < gridEnergisation[rowIndex].length; columnIndex++) {
-                byte energisation = gridEnergisation[rowIndex][columnIndex];
-                if ("|-/\\".contains(grid[rowIndex][columnIndex])) {
-                    System.out.print(grid[rowIndex][columnIndex]);
-                    continue;
-                }
-                System.out.print(switch (energisation) {
-                    case (byte) 0b00001000 -> "^"; // up
-                    case (byte) 0b00000100 -> "<"; // left
-                    case (byte) 0b00000010 -> "v"; // down
-                    case (byte) 0b00000001 -> ">"; // right
-                    case (byte) 0b00000000 -> "."; // empty
-                    default -> "2"; // hardcode
-                });
-            }
-            System.out.println();
-        }
+        // System.out.println();
+        // for (int rowIndex = 0; rowIndex < gridEnergisation.length; rowIndex++) {
+        //     for (int columnIndex = 0; columnIndex < gridEnergisation[rowIndex].length; columnIndex++) {
+        //         byte energisation = gridEnergisation[rowIndex][columnIndex];
+        //         if ("|-/\\".contains(grid[rowIndex][columnIndex])) {
+        //             System.out.print(grid[rowIndex][columnIndex]);
+        //             continue;
+        //         }
+        //         System.out.print(switch (energisation) {
+        //             case (byte) 0b00001000 -> "^"; // up
+        //             case (byte) 0b00000100 -> "<"; // left
+        //             case (byte) 0b00000010 -> "v"; // down
+        //             case (byte) 0b00000001 -> ">"; // right
+        //             case (byte) 0b00000000 -> "."; // empty
+        //             default -> "2"; // hardcode
+        //         });
+        //     }
+        //     System.out.println();
+        // }
 
-        // print for debugging: energised spaces
-        System.out.println();
+        // energised spaces
+        // System.out.println();
         int acc = 0;
         for (int rowIndex = 0; rowIndex < gridEnergisation.length; rowIndex++) {
             for (int columnIndex = 0; columnIndex < gridEnergisation[rowIndex].length; columnIndex++) {
                 byte energisation = gridEnergisation[rowIndex][columnIndex];
-                System.out.print(energisation > 0 ? "#" : ".");
+                // System.out.print(energisation > 0 ? "#" : ".");
                 acc += energisation > 0 ? 1 : 0;
             }
-            System.out.println();
+            // System.out.println();
         }
 
-        return String.valueOf(acc);
+        return acc;
+    }
+
+    // Extract solution
+    // Extract solution
+    public String star2() {
+        final String[][] grid = gridRows.toArray(new String[gridRows.size()][gridRows.get(0).length]);
+
+        int maximumEnergy = 0;
+        for (int columnIndex = 0; columnIndex < grid[0].length; columnIndex++) {
+            // top row
+            maximumEnergy = Math.max(maximumEnergy, calculateEnergisation(grid, new GridCoordinate(0, columnIndex), Direction.DOWN));
+            // bottom row
+            maximumEnergy = Math.max(maximumEnergy, calculateEnergisation(grid, new GridCoordinate(grid.length - 1, columnIndex), Direction.UP));
+        }
+        for (int rowIndex = 0; rowIndex < grid.length; rowIndex++) {
+            // left column
+            maximumEnergy = Math.max(maximumEnergy, calculateEnergisation(grid, new GridCoordinate(rowIndex, 0), Direction.RIGHT));
+            // right column
+            maximumEnergy = Math.max(maximumEnergy, calculateEnergisation(grid, new GridCoordinate(rowIndex, grid[rowIndex].length - 1), Direction.LEFT));
+        }
+
+        return String.valueOf(maximumEnergy);
     }
 
     private void energiseGridWithBeam(String[][] grid, byte[][] gridEnergisation, GridCoordinate beamLocation,
