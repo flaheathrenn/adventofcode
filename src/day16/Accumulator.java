@@ -79,7 +79,6 @@ public class Accumulator {
     }
 
     // Extract solution
-    // Extract solution
     public String star2() {
         final String[][] grid = gridRows.toArray(new String[gridRows.size()][gridRows.get(0).length]);
 
