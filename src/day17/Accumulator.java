@@ -29,6 +29,19 @@ public class Accumulator {
             }
             System.out.println();
         }
+        System.out.println();
+
+        // Calculate upper bound
+        // GridCoordinate on = new GridCoordinate(0, 0);
+        // GridCoordinate end = GridCoordinate.bottomRight(grid);
+        // Direction direction = Direction.RIGHT;
+        // int upperBound = 0;
+        // while (!on.equals(end)) {
+        //     upperBound += on.readFromGrid(grid);
+        //     on = on.advance(direction);
+        //     direction = direction == Direction.RIGHT ? Direction.DOWN : Direction.RIGHT;
+        // }
+        // System.out.println("Calculated an upper bound of " + upperBound);
 
         GridCoordinate targetCoordinate = new GridCoordinate(0, 0);
         Map<GridCoordinate, SpaceInfo> shortestPathsDirectory = new HashMap<>();
@@ -36,6 +49,7 @@ public class Accumulator {
         int shortestPath = findShortestPath(grid, targetCoordinate, shortestPathsDirectory, new Run(null, 0), visited);
 
         // print for debugging
+        System.out.println();
         String[][] resultGrid = new String[grid.length][grid[0].length];
         for (int i = 0; i < resultGrid.length; i++) {
             for (int j = 0; j < resultGrid[i].length; j++) {
@@ -46,7 +60,8 @@ public class Accumulator {
         GridCoordinate target = new GridCoordinate(grid.length - 1, grid[0].length - 1);
         Run tracingRun = new Run(null, 0);
         while (!tracingFrom.equals(target)) {
-            System.out.println("Tracing shortest path from " + tracingFrom + ", current run " + tracingRun + "...");
+            // System.out.println("Tracing shortest path from " + tracingFrom + ", current
+            // run " + tracingRun + "...");
             PathInfo nextStep = shortestPathsDirectory.get(tracingFrom).findShortestPathWhenEnteredByRun(tracingRun)
                     .get();
             tracingRun = tracingRun.compose(nextStep.direction);
@@ -73,26 +88,31 @@ public class Accumulator {
      */
     private int findShortestPath(int[][] grid, GridCoordinate currentCoordinate,
             Map<GridCoordinate, SpaceInfo> shortestPathsDirectory, Run currentRun, List<GridCoordinate> visited) {
-        System.out.println("Looking for shortest path from " + currentCoordinate + " after " + currentRun);
+        // System.out.println("Looking for shortest path from " + currentCoordinate + "
+        // after " + currentRun);
         // try {
         // Thread.sleep(1000L);
         // } catch (InterruptedException e) {
         // // noop;
         // }
         // if at end, done
-        if (new GridCoordinate(grid.length - 1, grid[0].length - 1).equals(currentCoordinate)) {
-            return grid[grid.length - 1][grid[0].length - 1];
+        GridCoordinate end = GridCoordinate.bottomRight(grid);
+        if (end.equals(currentCoordinate)) {
+            return currentCoordinate.readFromGrid(grid);
+            // return grid[grid.length - 1][grid[0].length - 1];
         }
         // look up in directory
         if (shortestPathsDirectory.containsKey(currentCoordinate)) {
             Optional<PathInfo> recordedShortestPath = shortestPathsDirectory.get(currentCoordinate)
                     .findShortestPathWhenEnteredByRun(currentRun);
             if (recordedShortestPath.isPresent()) {
-                System.out.println("Found useable shortest path from " + currentCoordinate + " given run " + currentRun
-                        + ", length " + recordedShortestPath.get().length);
+                // System.out.println("Found useable shortest path from " + currentCoordinate +
+                // " given run " + currentRun
+                // + ", length " + recordedShortestPath.get().length);
                 return recordedShortestPath.get().length;
             } else {
-                System.out.println("No useable shortest path from " + currentCoordinate + " given run " + currentRun);
+                // System.out.println("No useable shortest path from " + currentCoordinate + "
+                // given run " + currentRun);
             }
         }
         visited.add(currentCoordinate);
@@ -108,7 +128,7 @@ public class Accumulator {
         Direction directionToMove = null;
         for (Direction direction : possibleDirections) {
             GridCoordinate newCoordinate = currentCoordinate.advance(direction);
-            if (!newCoordinate.validOnGridOfSize(grid.length, grid[0].length)) {
+            if (!newCoordinate.validOnGrid(grid)) {
                 continue; // don't go that way
             }
             if (visited.contains(newCoordinate)) {
@@ -125,14 +145,14 @@ public class Accumulator {
         if (currentShortestPath == Integer.MAX_VALUE) {
             return Integer.MAX_VALUE;
         }
-        int newShortestPathLength = currentShortestPath + grid[currentCoordinate.row][currentCoordinate.column];
+        int newShortestPathLength = currentShortestPath + currentCoordinate.readFromGrid(grid);
         if (!shortestPathsDirectory.containsKey(currentCoordinate)) {
             shortestPathsDirectory.put(currentCoordinate, new SpaceInfo());
         }
         shortestPathsDirectory.get(currentCoordinate).shortestPaths
                 .add(new PathInfo(newShortestPathLength, currentRun, directionToMove));
-        System.out.println("Recorded shortest path from " + currentCoordinate + " as " + newShortestPathLength
-                + " when entered from " + currentRun);
+        // System.out.println("Recorded shortest path from " + currentCoordinate + " as " + newShortestPathLength
+        // + " when entered from " + currentRun);
         return newShortestPathLength;
     }
 
@@ -160,7 +180,7 @@ public class Accumulator {
         Set<PathInfo> shortestPaths = new HashSet<PathInfo>();
 
         Optional<PathInfo> findShortestPathWhenEnteredByRun(Run run) {
-            System.out.println("Raw data: " + shortestPaths);
+            // System.out.println("Raw data: " + shortestPaths);
             if (shortestPaths.isEmpty()) {
                 return Optional.empty();
             }
@@ -238,7 +258,20 @@ public class Accumulator {
             }
         }
 
-        boolean validOnGridOfSize(int maxRow, int maxColumn) {
+        int readFromGrid(int[][] grid) {
+            return grid[row][column];
+        }
+
+        static GridCoordinate bottomRight(int[][] grid) {
+            if (grid.length == 0) {
+                throw new IllegalArgumentException();
+            }
+            return new GridCoordinate(grid.length - 1, grid[0].length - 1);
+        }
+
+        boolean validOnGrid(int[][] grid) {
+            int maxRow = grid.length;
+            int maxColumn = grid[0].length;
             return row >= 0 && column >= 0 && row < maxRow && column < maxColumn;
         }
     }
