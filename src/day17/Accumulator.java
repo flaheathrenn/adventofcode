@@ -30,12 +30,37 @@ public class Accumulator {
             System.out.println();
         }
 
-        GridCoordinate targetCoordinate = new GridCoordinate(grid.length - 1, grid[0].length - 1);
+        GridCoordinate targetCoordinate = new GridCoordinate(0, 0);
         Map<GridCoordinate, SpaceInfo> shortestPathsDirectory = new HashMap<>();
         List<GridCoordinate> visited = new ArrayList<>();
-        int shortestPath = findShortestPathFromStart(grid, targetCoordinate, shortestPathsDirectory, new Run(null, 0), visited).orElse(Integer.MAX_VALUE);
+        int shortestPath = findShortestPath(grid, targetCoordinate, shortestPathsDirectory, new Run(null, 0), visited);
 
-        return String.valueOf(shortestPath);
+        // print for debugging
+        String[][] resultGrid = new String[grid.length][grid[0].length];
+        for (int i = 0; i < resultGrid.length; i++) {
+            for (int j = 0; j < resultGrid[i].length; j++) {
+                resultGrid[i][j] = ".";
+            }
+        }
+        GridCoordinate tracingFrom = new GridCoordinate(0, 0);
+        GridCoordinate target = new GridCoordinate(grid.length - 1, grid[0].length - 1);
+        Run tracingRun = new Run(null, 0);
+        while (!tracingFrom.equals(target)) {
+            System.out.println("Tracing shortest path from " + tracingFrom + ", current run " + tracingRun + "...");
+            PathInfo nextStep = shortestPathsDirectory.get(tracingFrom).findShortestPathWhenEnteredByRun(tracingRun)
+                    .get();
+            tracingRun = tracingRun.compose(nextStep.direction);
+            tracingFrom = tracingFrom.advance(nextStep.direction);
+            resultGrid[tracingFrom.row][tracingFrom.column] = nextStep.direction.asciiArt();
+        }
+        for (int i = 0; i < resultGrid.length; i++) {
+            for (int j = 0; j < resultGrid[i].length; j++) {
+                System.out.print(resultGrid[i][j]);
+            }
+            System.out.println();
+        }
+
+        return String.valueOf(shortestPath - grid[0][0]);
     }
 
     /**
@@ -46,101 +71,149 @@ public class Accumulator {
      * legal.
      * Returns the path length
      */
-    private Optional<Integer> findShortestPathFromStart(int[][] grid, GridCoordinate targetCoordinate,
-            Map<GridCoordinate, SpaceInfo> shortestPathsDirectory, Run run, List<GridCoordinate> visited) {
-        System.out.println("Looking for shortest path to " + targetCoordinate.toString() + " that admits run " + run.toString());
-        try {
-            Thread.sleep(1000L);
-        } catch (InterruptedException e) {
-            // noop;
+    private int findShortestPath(int[][] grid, GridCoordinate currentCoordinate,
+            Map<GridCoordinate, SpaceInfo> shortestPathsDirectory, Run currentRun, List<GridCoordinate> visited) {
+        System.out.println("Looking for shortest path from " + currentCoordinate + " after " + currentRun);
+        // try {
+        // Thread.sleep(1000L);
+        // } catch (InterruptedException e) {
+        // // noop;
+        // }
+        // if at end, done
+        if (new GridCoordinate(grid.length - 1, grid[0].length - 1).equals(currentCoordinate)) {
+            return grid[grid.length - 1][grid[0].length - 1];
         }
-        if (new GridCoordinate(0, 0).equals(targetCoordinate)) {
-            return Optional.of(0);
-        }
-        if (visited.contains(targetCoordinate)) {
-            return Optional.empty();
-        }
-        visited.add(targetCoordinate);
-        if (shortestPathsDirectory.containsKey(targetCoordinate)) {
-            Optional<Integer> maybeShortestPath = shortestPathsDirectory.get(targetCoordinate).findShortestPathByRun(run);
-            if (maybeShortestPath.isPresent()) {
-                return maybeShortestPath;
+        // look up in directory
+        if (shortestPathsDirectory.containsKey(currentCoordinate)) {
+            Optional<PathInfo> recordedShortestPath = shortestPathsDirectory.get(currentCoordinate)
+                    .findShortestPathWhenEnteredByRun(currentRun);
+            if (recordedShortestPath.isPresent()) {
+                System.out.println("Found useable shortest path from " + currentCoordinate + " given run " + currentRun
+                        + ", length " + recordedShortestPath.get().length);
+                return recordedShortestPath.get().length;
+            } else {
+                System.out.println("No useable shortest path from " + currentCoordinate + " given run " + currentRun);
             }
         }
-        int thisCoordinateWeight = grid[targetCoordinate.row()][targetCoordinate.column()];
+        visited.add(currentCoordinate);
+        // otherwise, try all possible paths
         Set<Direction> possibleDirections = new HashSet<>(Set.of(Direction.values()));
-        if (run.direction != null) {
-            possibleDirections.remove(run.direction.opposite());
-        }
-        if (run.direction != null && run.length >= 3) {
-            possibleDirections.remove(run.direction);
-        }
-        Optional<Integer> shortestPathLength = Optional.empty();
-        for (Direction possibleDirection : possibleDirections) {
-            GridCoordinate previousStep = targetCoordinate.advance(possibleDirection.opposite());
-            if (!previousStep.validOnGridOfSize(grid.length, grid[0].length)) {
-                continue;
-            }
-            Run newRun = new Run(possibleDirection, possibleDirection == run.direction() ? run.length + 1 : 1);
-            Optional<Integer> newValue = findShortestPathFromStart(grid, previousStep, shortestPathsDirectory, newRun, visited);
-            if (newValue.isPresent()) {
-                if (shortestPathLength.isEmpty()) {
-                    shortestPathLength = newValue;
-                } else {
-                    shortestPathLength = shortestPathLength.map(soFar -> Integer.min(soFar, newValue.get()));
-                }
+        if (currentRun.direction != null) {
+            possibleDirections.remove(currentRun.direction.opposite());
+            if (currentRun.length == 3) {
+                possibleDirections.remove(currentRun.direction);
             }
         }
-        if (shortestPathLength.isEmpty()) {
-            return Optional.empty();
+        int currentShortestPath = Integer.MAX_VALUE;
+        Direction directionToMove = null;
+        for (Direction direction : possibleDirections) {
+            GridCoordinate newCoordinate = currentCoordinate.advance(direction);
+            if (!newCoordinate.validOnGridOfSize(grid.length, grid[0].length)) {
+                continue; // don't go that way
+            }
+            if (visited.contains(newCoordinate)) {
+                continue; // don't go that way
+            }
+            Run newRun = currentRun.compose(direction);
+            int shortestPathLengthFromThere = findShortestPath(grid, newCoordinate, shortestPathsDirectory, newRun,
+                    new ArrayList<>(visited));
+            if (shortestPathLengthFromThere < currentShortestPath) {
+                currentShortestPath = shortestPathLengthFromThere;
+                directionToMove = direction;
+            }
         }
-        if (!shortestPathsDirectory.containsKey(targetCoordinate)) {
-            shortestPathsDirectory.put(targetCoordinate, new SpaceInfo());
+        if (currentShortestPath == Integer.MAX_VALUE) {
+            return Integer.MAX_VALUE;
         }
-        shortestPathsDirectory.get(targetCoordinate).shortestPathPerRun.put(run, shortestPathLength.get() + thisCoordinateWeight);
-        return Optional.of(shortestPathLength.get() + thisCoordinateWeight);
+        int newShortestPathLength = currentShortestPath + grid[currentCoordinate.row][currentCoordinate.column];
+        if (!shortestPathsDirectory.containsKey(currentCoordinate)) {
+            shortestPathsDirectory.put(currentCoordinate, new SpaceInfo());
+        }
+        shortestPathsDirectory.get(currentCoordinate).shortestPaths
+                .add(new PathInfo(newShortestPathLength, currentRun, directionToMove));
+        System.out.println("Recorded shortest path from " + currentCoordinate + " as " + newShortestPathLength
+                + " when entered from " + currentRun);
+        return newShortestPathLength;
     }
 
     private static record Run(Direction direction, int length) {
+        Run compose(Direction newDirection) {
+            if (direction != newDirection) {
+                return new Run(newDirection, 1);
+            } else {
+                return new Run(direction, length + 1);
+            }
+        }
+    }
+
+    private static record PathInfo(int length, Run run, Direction direction) implements Comparable<PathInfo> {
+
+        @Override
+        public int compareTo(PathInfo o) {
+            return Integer.compare(length, o.length);
+        }
+
     }
 
     private static class SpaceInfo {
-        // Returns the shortest path to reach this space
-        // that can admit each type of run
-        Map<Run, Integer> shortestPathPerRun = new HashMap<>();
+        // Returns the shortest path found from this space when entered by run Run
+        Set<PathInfo> shortestPaths = new HashSet<PathInfo>();
 
-        Optional<Integer> findShortestPathByRun(Run run) {
-            if (shortestPathPerRun.isEmpty()) {
+        Optional<PathInfo> findShortestPathWhenEnteredByRun(Run run) {
+            System.out.println("Raw data: " + shortestPaths);
+            if (shortestPaths.isEmpty()) {
                 return Optional.empty();
             }
             if (run.direction == null) {
-                return shortestPathPerRun.values().stream().min(Integer::compareTo);
-            } else if (run.length == 3) {
-                return shortestPathPerRun.entrySet().stream()
-                    .filter(entry -> entry.getKey().direction != run.direction)
-                    .map(Map.Entry::getValue)
-                    .min(Integer::compareTo);
-            } else {
-                int maxRunInDirection = 3 - run.length;
-                return shortestPathPerRun.entrySet().stream()
-                    .filter(entry -> entry.getKey().direction != run.direction || entry.getKey().length <= maxRunInDirection)
-                    .map(Map.Entry::getValue)
-                    .min(Integer::compareTo);
+                return shortestPaths.stream()
+                        .min(PathInfo::compareTo);
             }
+            return shortestPaths.stream()
+                    .filter(pathInfo -> pathInfo.run.direction == run.direction)
+                    .filter(pathInfo -> pathInfo.run.length == run.length)
+                    .min(PathInfo::compareTo);
+            // if (run.direction == null) {
+            // // return the shortest path from here
+            // System.out.println("Direction is null so can in any direction");
+            // return shortestPaths.stream().min(PathInfo::compareTo);
+            // } else if (run.length == 3) {
+            // // return the shortest path that begins with a different direction
+            // return shortestPaths.stream()
+            // .filter(pathInfo -> pathInfo.run.direction != run.direction)
+            // .min(PathInfo::compareTo);
+            // } else {
+            // // return the shortest path that begins with a different direction or doesn't
+            // continue in the same direction too long
+            // int maxRemainingLength = 3 - run.length;
+            // Optional<PathInfo> path = shortestPaths.stream()
+            // .filter(pathInfo -> pathInfo.run.direction != run.direction ||
+            // pathInfo.run.length <= maxRemainingLength)
+            // .min(PathInfo::compareTo);
+            // System.out.println("Found shortest path " + path + " after run " + run);
+            // return path;
+            // }
         }
     }
 
     public static enum Direction {
         UP, LEFT, DOWN, RIGHT;
 
-        public Direction opposite() {
-            Direction opposite = switch (this) {
+        Direction opposite() {
+            return switch (this) {
                 case UP -> DOWN;
                 case DOWN -> UP;
                 case LEFT -> RIGHT;
                 case RIGHT -> LEFT;
             };
-            return opposite; // not sure why I can't return directly
+        }
+
+        String asciiArt() {
+            return switch (this) {
+                case UP -> "^";
+                case DOWN -> "v";
+                case LEFT -> "<";
+                case RIGHT -> ">";
+            };
         }
     }
 
