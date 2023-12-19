@@ -32,21 +32,21 @@ public class Accumulator {
         System.out.println();
 
         // Calculate upper bound
-        // GridCoordinate on = new GridCoordinate(0, 0);
-        // GridCoordinate end = GridCoordinate.bottomRight(grid);
-        // Direction direction = Direction.RIGHT;
-        // int upperBound = 0;
-        // while (!on.equals(end)) {
-        //     upperBound += on.readFromGrid(grid);
-        //     on = on.advance(direction);
-        //     direction = direction == Direction.RIGHT ? Direction.DOWN : Direction.RIGHT;
-        // }
-        // System.out.println("Calculated an upper bound of " + upperBound);
+        GridCoordinate on = new GridCoordinate(0, 0);
+        GridCoordinate end = GridCoordinate.bottomRight(grid);
+        Direction direction = Direction.RIGHT;
+        int upperBound = 0;
+        while (!on.equals(end)) {
+            upperBound += on.readFromGrid(grid);
+            on = on.advance(direction);
+            direction = direction == Direction.RIGHT ? Direction.DOWN : Direction.RIGHT;
+        }
+        System.out.println("Calculated an upper bound of " + upperBound);
 
         GridCoordinate targetCoordinate = new GridCoordinate(0, 0);
         Map<GridCoordinate, SpaceInfo> shortestPathsDirectory = new HashMap<>();
         List<GridCoordinate> visited = new ArrayList<>();
-        int shortestPath = findShortestPath(grid, targetCoordinate, shortestPathsDirectory, new Run(null, 0), visited);
+        int shortestPath = findShortestPath(grid, targetCoordinate, shortestPathsDirectory, new Run(null, 0), visited, upperBound);
 
         // print for debugging
         System.out.println();
@@ -87,7 +87,7 @@ public class Accumulator {
      * Returns the path length
      */
     private int findShortestPath(int[][] grid, GridCoordinate currentCoordinate,
-            Map<GridCoordinate, SpaceInfo> shortestPathsDirectory, Run currentRun, List<GridCoordinate> visited) {
+            Map<GridCoordinate, SpaceInfo> shortestPathsDirectory, Run currentRun, List<GridCoordinate> visited, int upperBound) {
         // System.out.println("Looking for shortest path from " + currentCoordinate + "
         // after " + currentRun);
         // try {
@@ -95,6 +95,11 @@ public class Accumulator {
         // } catch (InterruptedException e) {
         // // noop;
         // }
+        // if over upper bound, this is a bad path, return immediately
+        if (upperBound < 0) {
+            return Integer.MAX_VALUE;
+        }
+
         // if at end, done
         GridCoordinate end = GridCoordinate.bottomRight(grid);
         if (end.equals(currentCoordinate)) {
@@ -124,6 +129,7 @@ public class Accumulator {
                 possibleDirections.remove(currentRun.direction);
             }
         }
+        int thisTileValue = currentCoordinate.readFromGrid(grid);
         int currentShortestPath = Integer.MAX_VALUE;
         Direction directionToMove = null;
         for (Direction direction : possibleDirections) {
@@ -136,7 +142,7 @@ public class Accumulator {
             }
             Run newRun = currentRun.compose(direction);
             int shortestPathLengthFromThere = findShortestPath(grid, newCoordinate, shortestPathsDirectory, newRun,
-                    new ArrayList<>(visited));
+                    new ArrayList<>(visited), upperBound - thisTileValue);
             if (shortestPathLengthFromThere < currentShortestPath) {
                 currentShortestPath = shortestPathLengthFromThere;
                 directionToMove = direction;
@@ -145,7 +151,7 @@ public class Accumulator {
         if (currentShortestPath == Integer.MAX_VALUE) {
             return Integer.MAX_VALUE;
         }
-        int newShortestPathLength = currentShortestPath + currentCoordinate.readFromGrid(grid);
+        int newShortestPathLength = currentShortestPath + thisTileValue;
         if (!shortestPathsDirectory.containsKey(currentCoordinate)) {
             shortestPathsDirectory.put(currentCoordinate, new SpaceInfo());
         }
