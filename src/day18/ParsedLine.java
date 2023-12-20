@@ -9,25 +9,25 @@ public class ParsedLine {
 
     // State
     final Direction direction;
-    final int distance;
-    final String colourCode;
+    final long distance;
+    // final String colourCode;
 
     // Parsing
-    private final Pattern LINE_PATTERN = Pattern.compile("([UDLR]) (\\d+) \\((#.+)\\)");
+    // private final Pattern LINE_PATTERN = Pattern.compile("([UDLR]) (\\d+) \\((#.+)\\)");
+    private final Pattern LINE_PATTERN = Pattern.compile("#(.{5})([0123])");
 
     public ParsedLine(String line) {
         // Example: R 6 (#70c710)
         Matcher m = LINE_PATTERN.matcher(line);
         m.find();
-        this.direction = switch (m.group(1)) {
-            case "U" -> Direction.UP;
-            case "L" -> Direction.LEFT;
-            case "R" -> Direction.RIGHT;
-            case "D" -> Direction.DOWN;
+        this.direction = switch (m.group(2)) {
+            case "0" -> Direction.RIGHT;
+            case "1" -> Direction.DOWN;
+            case "2" -> Direction.LEFT;
+            case "3" -> Direction.UP;
             default -> throw new IllegalArgumentException();
         };
-        this.distance = Integer.parseInt(m.group(2));
-        this.colourCode = m.group(3);
+        this.distance = Long.parseLong(m.group(1), 16);
     }
 
 }

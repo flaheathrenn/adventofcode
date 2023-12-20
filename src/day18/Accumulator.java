@@ -25,7 +25,7 @@ public class Accumulator {
     }
 
     // Extract solution
-    public String star1() {
+    public String star2() {
         Map<Long, List<GridCoordinate>> cornersByRow = new TreeMap<>(corners.stream().collect(Collectors.groupingBy(GridCoordinate::row)));
         Map<Long, List<Interval>> intervalsByRow = new TreeMap<>();
         cornersByRow.entrySet().stream().forEachOrdered(entry -> {
