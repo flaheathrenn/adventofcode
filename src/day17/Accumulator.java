@@ -32,16 +32,16 @@ public class Accumulator {
         System.out.println();
 
         // Calculate upper bound
-        GridCoordinate on = new GridCoordinate(0, 0);
-        GridCoordinate end = GridCoordinate.bottomRight(grid);
-        Direction direction = Direction.RIGHT;
+        // GridCoordinate on = new GridCoordinate(0, 0);
+        // GridCoordinate end = GridCoordinate.bottomRight(grid);
+        // Direction direction = Direction.RIGHT;
         int upperBound = 0;
-        while (!on.equals(end)) {
-            upperBound += on.readFromGrid(grid);
-            on = on.advance(direction);
-            direction = direction == Direction.RIGHT ? Direction.DOWN : Direction.RIGHT;
-        }
-        System.out.println("Calculated an upper bound of " + upperBound);
+        // while (!on.equals(end)) {
+        //     upperBound += on.readFromGrid(grid);
+        //     on = on.advance(direction);
+        //     direction = direction == Direction.RIGHT ? Direction.DOWN : Direction.RIGHT;
+        // }
+        // System.out.println("Calculated an upper bound of " + upperBound);
 
         GridCoordinate targetCoordinate = new GridCoordinate(0, 0);
         Map<GridCoordinate, SpaceInfo> shortestPathsDirectory = new HashMap<>();
@@ -88,41 +88,40 @@ public class Accumulator {
      */
     private int findShortestPath(int[][] grid, GridCoordinate currentCoordinate,
             Map<GridCoordinate, SpaceInfo> shortestPathsDirectory, Run currentRun, List<GridCoordinate> visited, int upperBound) {
-        // System.out.println("Looking for shortest path from " + currentCoordinate + "
-        // after " + currentRun);
+        System.out.println("Looking for shortest path from " + currentCoordinate + " after " + currentRun);
+        System.out.println("Path length so far: " + upperBound);
         // try {
         // Thread.sleep(1000L);
         // } catch (InterruptedException e) {
         // // noop;
         // }
         // if over upper bound, this is a bad path, return immediately
-        if (upperBound < 0) {
-            return Integer.MAX_VALUE;
-        }
+        // if (upperBound < 0) {
+        //     System.out.println("Upper bound exceeded, aborting");
+        //     return Integer.MAX_VALUE;
+        // }
 
         // if at end, done
         GridCoordinate end = GridCoordinate.bottomRight(grid);
         if (end.equals(currentCoordinate)) {
             return currentCoordinate.readFromGrid(grid);
-            // return grid[grid.length - 1][grid[0].length - 1];
         }
         // look up in directory
         if (shortestPathsDirectory.containsKey(currentCoordinate)) {
             Optional<PathInfo> recordedShortestPath = shortestPathsDirectory.get(currentCoordinate)
                     .findShortestPathWhenEnteredByRun(currentRun);
             if (recordedShortestPath.isPresent()) {
-                // System.out.println("Found useable shortest path from " + currentCoordinate +
-                // " given run " + currentRun
-                // + ", length " + recordedShortestPath.get().length);
+                System.out.println("Found useable shortest path from " + currentCoordinate +
+                " given run " + currentRun
+                + ", length " + recordedShortestPath.get().length);
                 return recordedShortestPath.get().length;
             } else {
-                // System.out.println("No useable shortest path from " + currentCoordinate + "
-                // given run " + currentRun);
+                System.out.println("No useable shortest path from " + currentCoordinate + " given run " + currentRun);
             }
         }
         visited.add(currentCoordinate);
         // otherwise, try all possible paths
-        Set<Direction> possibleDirections = new HashSet<>(Set.of(Direction.values()));
+        List<Direction> possibleDirections = new ArrayList<>(List.of(Direction.RIGHT, Direction.DOWN, Direction.LEFT, Direction.UP));
         if (currentRun.direction != null) {
             possibleDirections.remove(currentRun.direction.opposite());
             if (currentRun.length == 3) {
@@ -142,7 +141,7 @@ public class Accumulator {
             }
             Run newRun = currentRun.compose(direction);
             int shortestPathLengthFromThere = findShortestPath(grid, newCoordinate, shortestPathsDirectory, newRun,
-                    new ArrayList<>(visited), upperBound - thisTileValue);
+                    new ArrayList<>(visited), upperBound + thisTileValue);
             if (shortestPathLengthFromThere < currentShortestPath) {
                 currentShortestPath = shortestPathLengthFromThere;
                 directionToMove = direction;
@@ -157,8 +156,8 @@ public class Accumulator {
         }
         shortestPathsDirectory.get(currentCoordinate).shortestPaths
                 .add(new PathInfo(newShortestPathLength, currentRun, directionToMove));
-        // System.out.println("Recorded shortest path from " + currentCoordinate + " as " + newShortestPathLength
-        // + " when entered from " + currentRun);
+        System.out.println("Recorded shortest path from " + currentCoordinate + " as " + newShortestPathLength
+        + " when entered from " + currentRun);
         return newShortestPathLength;
     }
 
@@ -198,26 +197,6 @@ public class Accumulator {
                     .filter(pathInfo -> pathInfo.run.direction == run.direction)
                     .filter(pathInfo -> pathInfo.run.length == run.length)
                     .min(PathInfo::compareTo);
-            // if (run.direction == null) {
-            // // return the shortest path from here
-            // System.out.println("Direction is null so can in any direction");
-            // return shortestPaths.stream().min(PathInfo::compareTo);
-            // } else if (run.length == 3) {
-            // // return the shortest path that begins with a different direction
-            // return shortestPaths.stream()
-            // .filter(pathInfo -> pathInfo.run.direction != run.direction)
-            // .min(PathInfo::compareTo);
-            // } else {
-            // // return the shortest path that begins with a different direction or doesn't
-            // continue in the same direction too long
-            // int maxRemainingLength = 3 - run.length;
-            // Optional<PathInfo> path = shortestPaths.stream()
-            // .filter(pathInfo -> pathInfo.run.direction != run.direction ||
-            // pathInfo.run.length <= maxRemainingLength)
-            // .min(PathInfo::compareTo);
-            // System.out.println("Found shortest path " + path + " after run " + run);
-            // return path;
-            // }
         }
     }
 
