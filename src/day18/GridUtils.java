@@ -33,20 +33,20 @@ public class GridUtils {
         }
     }
 
-    static record GridCoordinate(int row, int column) {
-        GridCoordinate advance(Direction direction) {
+    static record GridCoordinate(long row, long column) implements Comparable<GridCoordinate> {
+        GridCoordinate advance(Direction direction, long distance) {
             switch (direction) {
                 case LEFT: {
-                    return new GridCoordinate(row, column - 1);
+                    return new GridCoordinate(row, column - distance);
                 }
                 case RIGHT: {
-                    return new GridCoordinate(row, column + 1);
+                    return new GridCoordinate(row, column + distance);
                 }
                 case UP: {
-                    return new GridCoordinate(row - 1, column);
+                    return new GridCoordinate(row - distance, column);
                 }
                 case DOWN: {
-                    return new GridCoordinate(row + 1, column);
+                    return new GridCoordinate(row + distance, column);
                 }
                 default: {
                     throw new IllegalArgumentException();
@@ -54,18 +54,12 @@ public class GridUtils {
             }
         }
 
-        String readFromGrid(String[][] grid) {
-            return grid[row][column];
-        }
-
-        void writeToGrid(String[][] grid, String value) {
-            grid[row][column] = value;
-        }
-
-        boolean validOnGrid(String[][] grid) {
-            int maxRow = grid.length;
-            int maxColumn = grid[0].length;
-            return row >= 0 && column >= 0 && row < maxRow && column < maxColumn;
+        @Override
+        public int compareTo(GridCoordinate o) {
+            if (this.row == o.row) {
+                return Long.compare(this.column, o.column);
+            }
+            return Long.compare(this.row, o.row);
         }
     }
 }
