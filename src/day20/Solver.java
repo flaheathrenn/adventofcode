@@ -1,4 +1,4 @@
-package day21;
+package day20;
 
 import global.InputProcessor;
 
@@ -8,8 +8,8 @@ public class Solver {
         // Set up any initial state
 
         // Process the input line-by-line
-        InputProcessor processor = new InputProcessor("src/day21/testinput.txt");
-        Accumulator result = processor.processLines(ParsedLine::new, (parsedLine, accumulator) -> {
+        InputProcessor processor = new InputProcessor("src/day20/input.txt");
+        Accumulator result = processor.processLines(Module::makeModule, (parsedLine, accumulator) -> {
             // Update accumulator using parsed line object
             return accumulator.update(parsedLine);
         }, new Accumulator());

@@ -1,10 +1,11 @@
 package day21;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 public class Accumulator {
+    private static final int STEP_COUNT = 50;
+
     // State
     List<String[]> gridRows = new ArrayList<>();
     int sX = -1;
@@ -33,7 +34,7 @@ public class Accumulator {
         // }
         // System.out.println("-----------");
 
-        for (int steps = 0; steps < 64; steps++) {
+        for (int steps = 0; steps < STEP_COUNT; steps++) {
             grid = step(grid);
             // for (int rowIndex = 0; rowIndex < grid.length; rowIndex++) {
             //     for (int columnIndex = 0; columnIndex < grid[rowIndex].length; columnIndex++) {
@@ -78,9 +79,7 @@ public class Accumulator {
     }
 
     private String safeGet(String[][] grid, int row, int column) {
-        if (row < 0 || column < 0 || row >= grid.length || column >= grid[0].length) {
-            return "";
-        }
-        return grid[row][column];
+        // TODO: this approach doesn't work because the map is infinite, not toroidal
+        return grid[Math.floorMod(row, grid.length)][Math.floorMod(column, grid[0].length)];
     }
 }
