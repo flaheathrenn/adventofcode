@@ -69,6 +69,7 @@ public class ParsedLine {
 
     public static interface Condition {
         public String test(Part p);
+        public String result();
     }
 
     public static record ComparingCondition(Parameter parameter, Comparer comparer, int conditionValue, String result)
