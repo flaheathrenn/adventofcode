@@ -36,9 +36,11 @@ public class AccumulatorForStar2 {
         long tXTopLeft = tForDirections(grid, steps, gridSize, Direction.UP, Direction.LEFT);
         long correction = Math.ceilDiv(steps + 1, 2);
         long secondOrderCorrection = (steps + 1) % 2;
-        // System.out.println("Bottom right: " + tXBottomRight + "; bottom left: " + tXBottomLeft + "; top right: "
-        //         + tXTopRight + "; top left: " + tXTopLeft + "; first order correction: " + correction
-        //         + "; second order correction: " + secondOrderCorrection);
+        // System.out.println("Bottom right: " + tXBottomRight + "; bottom left: " +
+        // tXBottomLeft + "; top right: "
+        // + tXTopRight + "; top left: " + tXTopLeft + "; first order correction: " +
+        // correction
+        // + "; second order correction: " + secondOrderCorrection);
         return String.valueOf(
                 tXBottomRight + tXBottomLeft + tXTopLeft + tXTopRight - 4 * correction + secondOrderCorrection);
     }
@@ -52,22 +54,31 @@ public class AccumulatorForStar2 {
 
         // print for debugging
         // if (firstDirection == Direction.DOWN && secondDirection == Direction.RIGHT) {
-        //     for (int rowIndex = 0; rowIndex < shiftedGridS.length; rowIndex++) {
-        //         for (int columnIndex = 0; columnIndex < shiftedGridS[rowIndex].length; columnIndex++) {
-        //             if (shiftedGridS[rowIndex][columnIndex].equals("#")) {
-        //                 System.out.print("#");
-        //             } else if (resultGrid[rowIndex][columnIndex] == null) {
-        //                 System.out.print("X"); // unreachable space
-        //             } else {
-        //                 System.out.print(printable(resultGrid[rowIndex][columnIndex]));
-        //             }
-        //         }
-        //         System.out.println();
-        //     }
-        //     System.out.println("M values: " + Arrays.stream(mValues).mapToObj(String::valueOf).collect(Collectors.joining(",")));
+        // for (int rowIndex = 0; rowIndex < shiftedGridS.length; rowIndex++) {
+        // for (int columnIndex = 0; columnIndex < shiftedGridS[rowIndex].length;
+        // columnIndex++) {
+        // if (shiftedGridS[rowIndex][columnIndex].equals("#")) {
+        // System.out.print("#");
+        // } else if (resultGrid[rowIndex][columnIndex] == null) {
+        // System.out.print("X"); // unreachable space
+        // } else {
+        // System.out.print(printable(resultGrid[rowIndex][columnIndex]));
+        // }
+        // }
+        // System.out.println();
+        // }
+        // System.out.println("M values: " +
+        // Arrays.stream(mValues).mapToObj(String::valueOf).collect(Collectors.joining(",")));
         // }
 
-        return tX(steps, gridSize, mValues);
+        long slowValue = tX(steps, gridSize, mValues);
+        long fastValue = fastTX(steps, gridSize, mValues);
+
+        if (slowValue != fastValue) {
+            System.out.println("Fast/slow mismatch for step count " + steps + ": fast value " + fastValue);
+        }
+
+        return slowValue;
     }
 
     // Extract solution
@@ -103,6 +114,7 @@ public class AccumulatorForStar2 {
     }
 
     private long tX(long x, int gridSize, int[] mValues) {
+        // System.out.println("Entered tX: " + System.currentTimeMillis());
         long tValue = 0;
         for (long termNumber = 1; termNumber < 2 + Math.floorDiv(x, gridSize); termNumber++) {
             long mValueForTerm;
@@ -113,12 +125,68 @@ public class AccumulatorForStar2 {
             } else if (termNumber == Math.floorDiv(x, gridSize)) { // penultimate term
                 mValueForTerm = (x - gridSize) % (gridSize * 2 - 2);
             } else {
-                mValueForTerm = termNumber % 2 == x % 2 ? getIndexOfHighestOddMValue(mValues) : getIndexOfHighestEvenMValue(mValues);
+                mValueForTerm = termNumber % 2 == x % 2 ? getIndexOfHighestOddMValue(mValues)
+                        : getIndexOfHighestEvenMValue(mValues);
             }
             // System.out.println("Adding term " + termNumber + "M" + (int) mValueForTerm);
             tValue += termNumber * mValues[(int) mValueForTerm];
         }
+        // System.out.println("Leaving tX: " + System.currentTimeMillis());
         return tValue;
+    }
+
+    private long fastTX(long x, int gridSize, int[] mValues) {
+        // System.out.println("Entered tX: " + System.currentTimeMillis());
+        // There will be 1 + floor(x/gridSize) terms.
+        // The last and second-to-last terms have to be calculated especially;
+        // all the others (that is, terms 1 through floor(x/gridSize) - 1) are simply
+        // the term number + either the highest odd or even m value, depending on the
+        // parity of the term number and x.
+        // So we can work that out using triangle numbers or something.
+
+        long floorOfXOverGridSize = Math.floorDiv(x, gridSize);
+        long finalTermCoefficient = 1 + floorOfXOverGridSize;
+        int finalTermMValue = (int) (x % gridSize);
+        long penultimateTermCoefficient = floorOfXOverGridSize;
+        int penultimateTermMValue = 0;
+        if (penultimateTermCoefficient > 0) {
+            if (x < mValues.length) {
+                penultimateTermMValue = (int) x;
+            } else {
+                penultimateTermMValue = (int) ((x - gridSize) % (gridSize * 2 - 2)); // not entirely sure about this but it
+                                                                                 // seems plausible
+            }
+        }
+        long oddTermCoefficientSum = sumOfOddNumbersUpToButNotIncluding(floorOfXOverGridSize);
+        int oddTermMValue = x % 2 == 1 ? getIndexOfHighestOddMValue(mValues)
+                : getIndexOfHighestEvenMValue(mValues);
+        long evenTermCoefficientSum = sumOfEvenNumbersUpToButNotIncluding(floorOfXOverGridSize);
+        int evenTermMValue = x % 2 == 1 ? getIndexOfHighestEvenMValue(mValues)
+                : getIndexOfHighestOddMValue(mValues);
+
+        System.out.println(String.format("Fast value calculated as %sM%s + %sM%s + %sM%s + %sM%s", oddTermCoefficientSum, oddTermMValue, evenTermCoefficientSum, evenTermMValue, penultimateTermCoefficient, penultimateTermMValue, finalTermCoefficient, finalTermMValue));
+        long tValue = (oddTermCoefficientSum * mValues[oddTermMValue])
+                + (evenTermCoefficientSum * mValues[evenTermMValue])
+                + (penultimateTermCoefficient * mValues[penultimateTermMValue])
+                + (finalTermCoefficient * mValues[finalTermMValue]);
+
+        return tValue;
+    }
+
+    private long sumOfOddNumbersUpToButNotIncluding(long floorOfXOverGridSize) {
+        long acc = 0;
+        for (long i = 1; i < floorOfXOverGridSize; i += 2) {
+            acc += i;
+        }
+        return acc;
+    }
+
+    private long sumOfEvenNumbersUpToButNotIncluding(long floorOfXOverGridSize) {
+        long acc = 0;
+        for (long i = 2; i < floorOfXOverGridSize; i += 2) {
+            acc += i;
+        }
+        return acc;
     }
 
     private int getIndexOfHighestOddMValue(int[] mValues) {
@@ -138,6 +206,7 @@ public class AccumulatorForStar2 {
     }
 
     private String[][] shiftGrid(String[][] grid, int sRow2, int sColumn2) {
+        // System.out.println("Entered shiftGrid: " + System.currentTimeMillis());
         String[][] resultGrid = new String[grid.length][grid[0].length];
         for (int i = 0; i < resultGrid.length; i++) {
             for (int j = 0; j < resultGrid[i].length; j++) {
@@ -145,6 +214,7 @@ public class AccumulatorForStar2 {
                         grid[0].length)];
             }
         }
+        // System.out.println("Leaving shiftGrid: " + System.currentTimeMillis());
         return resultGrid;
     }
 
@@ -172,8 +242,10 @@ public class AccumulatorForStar2 {
     }
 
     private Integer[][] manhattanDistance(String[][] grid) {
+        // System.out.println("Entered manhattanDistance: " +
+        // System.currentTimeMillis());
         Integer[][] resultGrid = new Integer[grid.length][grid[0].length];
-        for (int times = 0; times < 2500; times++) {
+        for (int times = 0; times < grid.length * 2 + 20; times++) { // should be enough times
             for (int row = 0; row < grid.length; row++) {
                 for (int column = 0; column < grid[row].length; column++) {
                     if (grid[row][column].equals("#")) {
@@ -191,10 +263,13 @@ public class AccumulatorForStar2 {
                 }
             }
         }
+        // System.out.println("Leaving manhattanDistance: " +
+        // System.currentTimeMillis());
         return resultGrid;
     }
 
     private int[] mFinder(Integer[][] grid) {
+        // System.out.println("Entered mFinder: " + System.currentTimeMillis());
         int[] mValues = new int[grid.length * 2 - 1];
         for (int row = 0; row < grid.length; row++) {
             for (int column = 0; column < grid[row].length; column++) {
@@ -206,6 +281,7 @@ public class AccumulatorForStar2 {
                 }
             }
         }
+        // System.out.println("Leaving mFinder: " + System.currentTimeMillis());
         return mValues;
     }
 

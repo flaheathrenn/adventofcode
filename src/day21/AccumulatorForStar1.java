@@ -25,27 +25,27 @@ public class AccumulatorForStar1 {
         String[][] grid = gridRows.toArray(new String[gridRows.size()][gridRows.get(0).length]);
 
         // print for debugging
-        // for (int rowIndex = 0; rowIndex < grid.length; rowIndex++) {
-        //     for (int columnIndex = 0; columnIndex < grid[rowIndex].length; columnIndex++) {
-        //         System.out.print(grid[rowIndex][columnIndex]);
-        //     }
-        //     System.out.println();
-        // }
-        // System.out.println("-----------");
+        for (int rowIndex = 0; rowIndex < grid.length; rowIndex++) {
+            for (int columnIndex = 0; columnIndex < grid[rowIndex].length; columnIndex++) {
+                System.out.print(grid[rowIndex][columnIndex]);
+            }
+            System.out.println();
+        }
+        System.out.println("-----------");
 
-        for (int enlargements = 0; enlargements < 2; enlargements++) {
+        for (int enlargements = 0; enlargements < 3; enlargements++) {
             grid = enlargeGrid(grid);
         }
 
         for (int steps = 0; steps < stepCount; steps++) {
             grid = step(grid);
-            // for (int rowIndex = 0; rowIndex < grid.length; rowIndex++) {
-            //     for (int columnIndex = 0; columnIndex < grid[rowIndex].length; columnIndex++) {
-            //         System.out.print(grid[rowIndex][columnIndex]);
-            //     }
-            //     System.out.println();
-            // }
-            // System.out.println("-----------");
+            for (int rowIndex = 0; rowIndex < grid.length; rowIndex++) {
+                for (int columnIndex = 0; columnIndex < grid[rowIndex].length; columnIndex++) {
+                    System.out.print(grid[rowIndex][columnIndex]);
+                }
+                System.out.println();
+            }
+            System.out.println("-----------");
         }
 
         return String.valueOf(ohCount);
