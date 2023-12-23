@@ -71,11 +71,18 @@ public class AccumulatorForStar2 {
         // Arrays.stream(mValues).mapToObj(String::valueOf).collect(Collectors.joining(",")));
         // }
 
+        long pre = System.currentTimeMillis();
         long slowValue = tX(steps, gridSize, mValues);
+        long slowTime = System.currentTimeMillis();
         long fastValue = fastTX(steps, gridSize, mValues);
+        long fastTime = System.currentTimeMillis();
+
+        System.out.println("Slow " + (slowTime - pre) + " vs fast " + (fastTime - slowTime));
 
         if (slowValue != fastValue) {
             System.out.println("Fast/slow mismatch for step count " + steps + ": fast value " + fastValue);
+        } else {
+            System.out.println("Fast/slow match for step count " + steps);
         }
 
         return slowValue;
@@ -166,7 +173,7 @@ public class AccumulatorForStar2 {
         int evenTermMValue = x % 2 == 1 ? getIndexOfHighestEvenMValue(mValues)
                 : getIndexOfHighestOddMValue(mValues);
 
-        System.out.println(String.format("Fast value calculated as %sM%s + %sM%s + %sM%s + %sM%s", oddTermCoefficientSum, oddTermMValue, evenTermCoefficientSum, evenTermMValue, penultimateTermCoefficient, penultimateTermMValue, finalTermCoefficient, finalTermMValue));
+        // System.out.println(String.format("Fast value calculated as %sM%s + %sM%s + %sM%s + %sM%s", oddTermCoefficientSum, oddTermMValue, evenTermCoefficientSum, evenTermMValue, penultimateTermCoefficient, penultimateTermMValue, finalTermCoefficient, finalTermMValue));
         long tValue = (oddTermCoefficientSum * mValues[oddTermMValue])
                 + (evenTermCoefficientSum * mValues[evenTermMValue])
                 + (penultimateTermCoefficient * mValues[penultimateTermMValue])
