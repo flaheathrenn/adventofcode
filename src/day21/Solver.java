@@ -8,7 +8,7 @@ public class Solver {
         // Set up any initial state
 
         // Process the input line-by-line
-        InputProcessor processor = new InputProcessor("src/day21/testinput.txt");
+        InputProcessor processor = new InputProcessor("src/day21/input.txt");
         AccumulatorForStar1 resultOld = processor.processLines(ParsedLine::new, (parsedLine, accumulator) -> {
             // Update accumulator using parsed line object
             return accumulator.update(parsedLine);
@@ -17,7 +17,7 @@ public class Solver {
             // Update accumulator using parsed line object
             return accumulator.update(parsedLine);
         }, new AccumulatorForStar2());
-        for (int stepCount = 16; stepCount < 17; stepCount++) {
+        for (int stepCount = 500; stepCount < 501; stepCount++) {
             String oldMethod = resultOld.star1(stepCount);
             System.out.println("Star 2 solution (old method): " + oldMethod);
             String newMethod = result.star2(stepCount);

@@ -123,7 +123,8 @@ public class AccumulatorForStar2 {
             } else if (x < mValues.length) {
                 mValueForTerm = x;
             } else if (termNumber == Math.floorDiv(x, gridSize)) { // penultimate term
-                mValueForTerm = (x - gridSize) % (gridSize * 2 - 2);
+                // mValueForTerm = (x - gridSize) % (gridSize * 2 - 2);
+                mValueForTerm = (x % gridSize) + gridSize;
             } else {
                 mValueForTerm = termNumber % 2 == x % 2 ? getIndexOfHighestOddMValue(mValues)
                         : getIndexOfHighestEvenMValue(mValues);
@@ -148,15 +149,16 @@ public class AccumulatorForStar2 {
         long finalTermCoefficient = 1 + floorOfXOverGridSize;
         int finalTermMValue = (int) (x % gridSize);
         long penultimateTermCoefficient = floorOfXOverGridSize;
-        int penultimateTermMValue = 0;
-        if (penultimateTermCoefficient > 0) {
-            if (x < mValues.length) {
-                penultimateTermMValue = (int) x;
-            } else {
-                penultimateTermMValue = (int) ((x - gridSize) % (gridSize * 2 - 2)); // not entirely sure about this but it
-                                                                                 // seems plausible
-            }
-        }
+        // int penultimateTermMValue = 0;
+        // if (penultimateTermCoefficient > 0) {
+        //     if (x < mValues.length) {
+        //         penultimateTermMValue = (int) x;
+        //     } else {
+        //         penultimateTermMValue = (int) ((x - gridSize) % (gridSize * 2 - 2)); // not entirely sure about this but it
+        //                                                                          // seems plausible
+        //     }
+        // }
+        int penultimateTermMValue = finalTermMValue + gridSize;
         long oddTermCoefficientSum = sumOfOddNumbersUpToButNotIncluding(floorOfXOverGridSize);
         int oddTermMValue = x % 2 == 1 ? getIndexOfHighestOddMValue(mValues)
                 : getIndexOfHighestEvenMValue(mValues);
