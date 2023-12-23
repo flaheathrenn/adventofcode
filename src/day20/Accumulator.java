@@ -21,6 +21,33 @@ public class Accumulator {
     // Extract solution
     public String star1() {
         // init conjunction modules
+        initConjunctionModules();
+
+        // actual calcuation
+        PushButtonResult acc = new PushButtonResult(0, 0);
+        for (int i = 0; i < 1000; i++) {
+            acc = acc.add(pushButton());
+        }
+        return String.valueOf(acc.lowPulses * acc.highPulses);
+    }
+
+    // Extract solution
+    public String star2() {
+        // init conjunction modules
+        initConjunctionModules();
+
+        // actual calculation
+        long acc = 1322000000L;
+        do {
+            if (acc % 1000000 == 0) {
+                System.out.println(acc);
+            }
+            acc++;
+        } while (!pushButton2());
+        return String.valueOf(acc);
+    }
+
+    private static void initConjunctionModules() {
         List<String> conjunctionModuleNames = moduleAlmanac.values().stream()
                 .filter(m -> m instanceof ConjunctionModule).map(Module::getName).toList();
 
@@ -32,32 +59,6 @@ public class Accumulator {
                 }
             }
         }
-
-        // print for debug
-        // for (Module m : moduleAlmanac.values()) {
-        //     if (m instanceof BroadcasterModule) {
-        //         System.out.print("b");
-        //     }
-        //     if (m instanceof FlipFlopModule) {
-        //         System.out.print("%");
-        //     }
-        //     if (m instanceof ConjunctionModule) {
-        //         System.out.print("&");
-        //     }
-        //     System.out.print(m.name + " -> " + m.destinations);
-        //     if (m instanceof ConjunctionModule) {
-        //         ConjunctionModule cm = (ConjunctionModule) m;
-        //         System.out.print(" (" + cm.inputMemories + ")");
-        //     }
-        //     System.out.println();
-        // }
-
-        // actual calcuation
-        PushButtonResult acc = new PushButtonResult(0, 0);
-        for (int i = 0; i < 1000; i++) {
-            acc = acc.add(pushButton());
-        }
-        return String.valueOf(acc.lowPulses * acc.highPulses);
     }
 
     public static PushButtonResult pushButton() {
@@ -68,6 +69,9 @@ public class Accumulator {
         lowPulses++;
         while (!currentPulses.isEmpty()) {
             PulseQueueItem topItem = currentPulses.poll();
+            if (topItem.receivingModule().equals("rx") && topItem.pulse() == Pulse.LOW) {
+                throw new RxReceivedLowPulseException();
+            }
             if (!moduleAlmanac.containsKey(topItem.receivingModule())) {
                 continue;
             }
@@ -82,9 +86,29 @@ public class Accumulator {
         return new PushButtonResult(lowPulses, highPulses);
     }
 
+    public static boolean pushButton2() {
+        ArrayDeque<PulseQueueItem> currentPulses = new ArrayDeque<PulseQueueItem>();
+        currentPulses.add(new PulseQueueItem(Pulse.LOW, "broadcaster", null));
+        while (!currentPulses.isEmpty()) {
+            PulseQueueItem topItem = currentPulses.poll();
+            if (topItem.receivingModule().equals("rx") && topItem.pulse() == Pulse.LOW) {
+                return true;
+            }
+            if (!moduleAlmanac.containsKey(topItem.receivingModule())) {
+                continue;
+            }
+            Module handlingModule = moduleAlmanac.get(topItem.receivingModule());
+            List<PulseQueueItem> newPulses = handlingModule.handlePulse(topItem.pulse(), topItem.originatingModule());
+            currentPulses.addAll(newPulses);
+        }
+        return false;
+    }
+
     public static record PushButtonResult(long lowPulses, long highPulses) {
         public PushButtonResult add(PushButtonResult other) {
             return new PushButtonResult(this.lowPulses + other.lowPulses, this.highPulses + other.highPulses);
         }
     }
+    
+    public static class RxReceivedLowPulseException extends IllegalStateException {}
 }

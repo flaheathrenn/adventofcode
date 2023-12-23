@@ -2,9 +2,9 @@ package day21;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 public class Accumulator {
-    private static final int STEP_COUNT = 50;
 
     // State
     List<String[]> gridRows = new ArrayList<>();
@@ -24,62 +24,110 @@ public class Accumulator {
     // Extract solution
     public String star1() {
         String[][] grid = gridRows.toArray(new String[gridRows.size()][gridRows.get(0).length]);
-
+        Integer[][] resultGrid = manhattanDistance(grid);
+        Integer[][] resultGridIfBlank = manhattanDistanceOnABlankGrid(grid);
         // print for debugging
-        // for (int rowIndex = 0; rowIndex < grid.length; rowIndex++) {
-        //     for (int columnIndex = 0; columnIndex < grid[rowIndex].length; columnIndex++) {
-        //         System.out.print(grid[rowIndex][columnIndex]);
-        //     }
-        //     System.out.println();
-        // }
-        // System.out.println("-----------");
-
-        for (int steps = 0; steps < STEP_COUNT; steps++) {
-            grid = step(grid);
-            // for (int rowIndex = 0; rowIndex < grid.length; rowIndex++) {
-            //     for (int columnIndex = 0; columnIndex < grid[rowIndex].length; columnIndex++) {
-            //         System.out.print(grid[rowIndex][columnIndex]);
-            //     }
-            //     System.out.println();
-            // }
-            // System.out.println("-----------");
+        for (int rowIndex = 0; rowIndex < grid.length; rowIndex++) {
+            for (int columnIndex = 0; columnIndex < grid[rowIndex].length; columnIndex++) {
+                // System.out.print(printable(resultGrid[rowIndex][columnIndex]));
+                if (grid[rowIndex][columnIndex].equals("S")) {
+                    System.out.print("S");
+                } else if (grid[rowIndex][columnIndex].equals("#")) {
+                    System.out.print("#");
+                } else if (!resultGridIfBlank[rowIndex][columnIndex].equals(resultGrid[rowIndex][columnIndex])) {
+                    if (resultGrid[rowIndex][columnIndex] == null) {
+                        System.out.print("X"); // unreachable space
+                    } else {
+                        System.out.print(resultGrid[rowIndex][columnIndex] - resultGridIfBlank[rowIndex][columnIndex]);
+                    }
+                } else {
+                    System.out.print(".");
+                }
+            }
+            System.out.println();
         }
-
         return "";
     }
 
-    private String[][] step(String[][] grid) {
-        String[][] resultGrid = new String[grid.length][grid[0].length];
-        int ohCount = 0;
-        for (int row = 0; row < grid.length; row++) {
-            for (int column = 0; column < grid[0].length; column++) {
-                if (grid[row][column].equals("#")) {
-                    resultGrid[row][column] = "#";
-                    continue;
+    private String printable(Integer i) {
+        if (i == null) {
+            return ".";
+        }
+        if (i < 10) {
+            return String.valueOf(i);
+        }
+        return switch (i) {
+            case 10 -> "A";
+            case 11 -> "B";
+            case 12 -> "C";
+            case 13 -> "D";
+            case 14 -> "E";
+            case 15 -> "F";
+            case 16 -> "G";
+            case 17 -> "H";
+            case 18 -> "I";
+            case 19 -> "J";
+            case 20 -> "K";
+            default -> "?";
+        };
+    }
+
+    private Integer[][] manhattanDistance(String[][] grid) {
+        Integer[][] resultGrid = new Integer[grid.length][grid[0].length];
+        for (int times = 0; times < 2500; times++) {
+            for (int row = 0; row < grid.length; row++) {
+                for (int column = 0; column < grid[row].length; column++) {
+                    if (grid[row][column].equals("#")) {
+                        continue; // keep as null
+                    }
+                    if (grid[row][column].equals("S")) {
+                        resultGrid[row][column] = 0;
+                        continue;
+                    }
+                    List<Integer> surroundings = safeSurroundings(resultGrid, row, column);
+                    Optional<Integer> minAdjacentNumber = surroundings.stream().min(Integer::compareTo);
+                    if (minAdjacentNumber.isPresent()) {
+                        resultGrid[row][column] = minAdjacentNumber.get() + 1;
+                    }
                 }
-                String surroundings = safeSurroundings(grid, row, column);
-                if (surroundings.contains("O") || surroundings.contains("S")) {
-                    resultGrid[row][column] = "O";
-                    ohCount++;
-                    continue;
-                }
-                resultGrid[row][column] = ".";
             }
         }
-        System.out.println(ohCount);
         return resultGrid;
     }
 
-    private String safeSurroundings(String[][] grid, int row, int column) {
-        String up = safeGet(grid, row - 1, column);
-        String left = safeGet(grid, row, column - 1);
-        String down = safeGet(grid, row + 1, column);
-        String right = safeGet(grid, row, column + 1);
-        return up + left + down + right;
+    private Integer[][] manhattanDistanceOnABlankGrid(String[][] grid) {
+        Integer[][] resultGrid = new Integer[grid.length][grid[0].length];
+        for (int times = 0; times < 2500; times++) {
+            for (int row = 0; row < grid.length; row++) {
+                for (int column = 0; column < grid[row].length; column++) {
+                    if (grid[row][column].equals("S")) {
+                        resultGrid[row][column] = 0;
+                        continue;
+                    }
+                    List<Integer> surroundings = safeSurroundings(resultGrid, row, column);
+                    Optional<Integer> minAdjacentNumber = surroundings.stream().min(Integer::compareTo);
+                    if (minAdjacentNumber.isPresent()) {
+                        resultGrid[row][column] = minAdjacentNumber.get() + 1;
+                    }
+                }
+            }
+        }
+        return resultGrid;
     }
 
-    private String safeGet(String[][] grid, int row, int column) {
-        // TODO: this approach doesn't work because the map is infinite, not toroidal
-        return grid[Math.floorMod(row, grid.length)][Math.floorMod(column, grid[0].length)];
+    private List<Integer> safeSurroundings(Integer[][] grid, int row, int column) {
+        List<Integer> surroundingsList = new ArrayList<>();
+        safeGet(grid, row - 1, column).ifPresent(surroundingsList::add);
+        safeGet(grid, row, column - 1).ifPresent(surroundingsList::add);
+        safeGet(grid, row + 1, column).ifPresent(surroundingsList::add);
+        safeGet(grid, row, column + 1).ifPresent(surroundingsList::add);
+        return surroundingsList;
+    }
+
+    private <T> Optional<T> safeGet(T[][] grid, int row, int column) {
+        if (row < 0 || row >= grid.length || column < 0 || column >= grid[0].length) {
+            return Optional.empty();
+        }
+        return Optional.ofNullable(grid[row][column]);
     }
 }
