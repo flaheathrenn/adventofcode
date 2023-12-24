@@ -1,11 +1,9 @@
 package day22;
 
-import java.util.HashSet;
 import java.util.Set;
 import java.util.TreeSet;
-import java.util.stream.Collectors;
 
-public class Accumulator {
+public class AccumulatorOldMethod {
     // State
     Set<Brick> bricks = new TreeSet<>();
 
@@ -14,7 +12,7 @@ public class Accumulator {
     int maxZ = 0;
 
     // Update state from parsed line
-    public Accumulator update(Brick brick) {
+    public AccumulatorOldMethod update(Brick brick) {
         bricks.add(brick);
         maxX = Integer.max(maxX, Integer.max(brick.startX, brick.endX));
         maxY = Integer.max(maxY, Integer.max(brick.startY, brick.endY));
@@ -24,12 +22,7 @@ public class Accumulator {
 
     // Extract solution
     public String star1() {
-        BrickArenaViewedFromAbovePosition[][] brickArena = new BrickArenaViewedFromAbovePosition[maxX + 1][maxY + 1];
-        for (int x = 0; x < brickArena.length; x++) {
-            for (int y = 0; y < brickArena[0].length; y++) {
-                brickArena[x][y] = new BrickArenaViewedFromAbovePosition(0, null);
-            }
-        }
+        Brick[][][] brickArena = new Brick[maxX + 1][maxY + 1][maxZ + 1];
 
         for (Brick brick : bricks) {
             // drop into the 'brick arena'
@@ -52,9 +45,6 @@ public class Accumulator {
         return String.valueOf(bricks.size() - unfreeBricks);
     }
 
-    public static record BrickArenaViewedFromAbovePosition(int zIndex, Brick brick) {
-    }
-
     /**
      * Mutates brickArena by creating brick brick and then letting it fall.
      * <p>
@@ -69,31 +59,40 @@ public class Accumulator {
      * and those supporting bricks are updated to add brick to their supportedBricks
      * property.
      */
-    private void dropBrick(Brick brick, BrickArenaViewedFromAbovePosition[][] brickArena) {
+    private void dropBrick(Brick brick, Brick[][][] brickArena) {
         // examine each layer starting from one lower than this brick's bottom
-        Set<BrickArenaViewedFromAbovePosition> bricksUnderneath = new HashSet<>();
-        for (int y = brick.startY; y < brick.endY + 1; y++) {
-            for (int x = brick.startX; x < brick.endX + 1; x++) {
-                if (brickArena[x][y].brick != null) {
-                    bricksUnderneath.add(brickArena[x][y]);
+        for (int z = brick.lowestZ() - 1; z > 0; z--) {
+            boolean brickSupported = false;
+            // examine each cell in the XY plane below this brick
+            for (int y = brick.startY; y < brick.endY + 1; y++) {
+                for (int x = brick.startX; x < brick.endX + 1; x++) {
+                    if (brickArena[x][y][z] != null) {
+                        Brick supportingBrick = brickArena[x][y][z];
+                        brick.supportingBricks.add(supportingBrick);
+                        supportingBrick.supportedBricks.add(brick);
+                        brickSupported = true;
+                    }
                 }
             }
+            // mark the cells this brick occupies
+            if (brickSupported) {
+                for (int y = brick.startY; y < brick.endY + 1; y++) {
+                    for (int x = brick.startX; x < brick.endX + 1; x++) {
+                        for (int height = 0; height < brick.endZ - brick.startZ + 1; height++) {
+                            brickArena[x][y][z + 1 + height] = brick;
+                        }
+                    }
+                }
+                return;
+            }
         }
-        // work out what's actually supporting
-        int supportedHeight = bricksUnderneath.stream().map(BrickArenaViewedFromAbovePosition::zIndex)
-                .max(Integer::compareTo).orElse(0);
-        Set<Brick> supportingBricks = bricksUnderneath.stream()
-                .filter(brickUnderneath -> brickUnderneath.zIndex == supportedHeight)
-                .map(BrickArenaViewedFromAbovePosition::brick).distinct().collect(Collectors.toSet());
-        brick.supportingBricks.addAll(supportingBricks);
-        for (Brick supporter : supportingBricks) {
-            supporter.supportedBricks.add(brick);
-        }
-        // record brick position
-        int brickHeight = brick.endZ - brick.startZ + 1;
+        // brick landed on floor
         for (int y = brick.startY; y < brick.endY + 1; y++) {
             for (int x = brick.startX; x < brick.endX + 1; x++) {
-                brickArena[x][y] = new BrickArenaViewedFromAbovePosition(supportedHeight + brickHeight, brick);
+                brickArena[x][y][1] = brick;
+                for (int height = 0; height < brick.endZ - brick.startZ + 1; height++) {
+                    brickArena[x][y][1 + height] = brick;
+                }
             }
         }
     }
