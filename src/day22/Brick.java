@@ -2,6 +2,7 @@ package day22;
 
 import java.util.HashSet;
 import java.util.Set;
+import java.util.TreeSet;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -16,8 +17,8 @@ public class Brick implements Comparable<Brick> {
     final int endY;
     final int endZ;
 
-    final Set<Brick> supportedBricks = new HashSet<>();
-    final Set<Brick> supportingBricks = new HashSet<>();
+    final Set<Brick> supportedBricks = new TreeSet<>();
+    final Set<Brick> supportingBricks = new TreeSet<>();
 
     // Parsing
     public Brick(String line) {

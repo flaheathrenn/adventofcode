@@ -9,15 +9,10 @@ public class Solver {
 
         // Process the input line-by-line
         InputProcessor processor = new InputProcessor("src/day22/input.txt");
-        AccumulatorOldMethod oldResult = processor.processLines(Brick::new, (parsedLine, accumulator) -> {
-            // Update accumulator using parsed line object
-            return accumulator.update(parsedLine);
-        }, new AccumulatorOldMethod());
         Accumulator result = processor.processLines(Brick::new, (parsedLine, accumulator) -> {
             // Update accumulator using parsed line object
             return accumulator.update(parsedLine);
         }, new Accumulator());
-        System.out.println("Star 1 solution (old method): " + oldResult.star1());
-        System.out.println("Star 1 solution (new method): " + result.star1());
+        System.out.println("Star 2 solution: " + result.star2());
     }
 }

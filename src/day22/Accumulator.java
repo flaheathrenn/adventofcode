@@ -1,6 +1,7 @@
 package day22;
 
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.Set;
 import java.util.TreeSet;
 import java.util.stream.Collectors;
@@ -23,7 +24,7 @@ public class Accumulator {
     }
 
     // Extract solution
-    public String star1() {
+    public String star2() {
         BrickArenaViewedFromAbovePosition[][] brickArena = new BrickArenaViewedFromAbovePosition[maxX + 1][maxY + 1];
         for (int x = 0; x < brickArena.length; x++) {
             for (int y = 0; y < brickArena[0].length; y++) {
@@ -39,17 +40,38 @@ public class Accumulator {
             dropBrick(brick, brickArena);
         }
 
-        int unfreeBricks = 0;
+        int acc = 0;
         for (Brick brick : bricks) {
-            for (Brick supportedBrick : brick.supportedBricks) {
-                if (supportedBrick.supportingBricks.size() == 1) {
-                    // not free
-                    unfreeBricks++;
-                    break;
-                }
+            acc += numberOfBricksThatWouldFallIfDisintegrated(brick);
+        }
+        return String.valueOf(acc);
+    }
+
+    private int numberOfBricksThatWouldFallIfDisintegrated(Brick brick) {
+        Set<Brick> allSupportedBricks = allSupportedBricks(brick);
+        int acc = 0;
+        Iterator<Brick> setIterator = allSupportedBricks.iterator();
+        while (setIterator.hasNext()) {
+            Brick supportedBrick = setIterator.next();
+            if (supportedBrick.equals(brick)) {
+                continue; // don't count the brick itself
+            }
+            if (allSupportedBricks.containsAll(supportedBrick.supportingBricks)) {
+                acc++;
+            } else {
+                setIterator.remove();
             }
         }
-        return String.valueOf(bricks.size() - unfreeBricks);
+        return acc;
+    }
+
+    private Set<Brick> allSupportedBricks(Brick brick) {
+        Set<Brick> result = new TreeSet<>(brick.supportedBricks);
+        result.add(brick);
+        for (Brick supportedBrick : brick.supportedBricks) {
+            result.addAll(allSupportedBricks(supportedBrick));
+        }
+        return result;
     }
 
     public static record BrickArenaViewedFromAbovePosition(int zIndex, Brick brick) {
