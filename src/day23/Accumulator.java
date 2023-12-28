@@ -22,7 +22,7 @@ public class Accumulator {
     }
 
     // Extract solution
-    public String star1() {
+    public String star2() {
         // Create grid
         String[][] grid = rows.toArray(new String[rows.size()][rows.get(0).length]);
 
@@ -31,56 +31,74 @@ public class Accumulator {
         GridCoordinate endPoint = new GridCoordinate(grid.length - 1, String.join("", grid[grid.length - 1]).indexOf("."));
 
         Set<Path> allPaths = new HashSet<>();
-        Set<Junction> allJunctions = new HashSet<>();
 
-        Set<Path> pathsFromEntryPoint = new HashSet<>();
-        Junction entryPointAsJunction = new Junction(entryPoint, pathsFromEntryPoint);
-        allJunctions.add(entryPointAsJunction);
+        findPaths(grid, entryPoint, endPoint, Direction.DOWN, allPaths);
 
-        findPaths(grid, entryPoint, endPoint, entryPointAsJunction, Direction.DOWN, allPaths, allJunctions);
+        // System.out.println(allPaths);
 
-        System.out.println(allPaths);
-        System.out.println(allJunctions);
+        // for (int row = 0; row < grid.length; row++) {
+        //     for (int column = 0; column < grid[0].length; column++) {
+        //         final GridCoordinate here = new GridCoordinate(row, column);
+        //         allPaths.stream().filter(path -> path.endPoints.contains(here)).findFirst()
+        //             .ifPresentOrElse(p -> System.out.print("*"),
+        //             () -> {
+        //                 long onPaths = allPaths.stream().filter(path -> path.interiorPoints().contains(here)).count();
+        //                 if (onPaths == 0) {
+        //                     System.out.print(here.safeGet(grid).orElse("%"));
+        //                 } else {
+        //                     System.out.print(onPaths);
+        //                 }
+        //             });
+        //     }
+        //     System.out.println();
+        // }
 
-        return String.valueOf(longestPathLengthToEndpointFrom(entryPoint, endPoint, new ArrayList<>(), allPaths, allJunctions));
+        return String.valueOf(longestPathLengthToEndpointFrom(entryPoint, endPoint, new HashSet<>(), allPaths));
+        //return String.valueOf(longestPathLengthToEndpointFrom(entryPoint, endPoint, new ArrayList<>(), allPaths));
     }
 
-    private int longestPathLengthToEndpointFrom(GridCoordinate entryPoint, GridCoordinate endPoint, List<Path> pathSoFar, Set<Path> allPaths, Set<Junction> allJunctions) {
-        if (endPoint.equals(entryPoint)) {
-            System.out.println("Reached endpoint, terminating");
-            return 0;
+    private int longestPathLengthToEndpointFrom(GridCoordinate entryPoint, GridCoordinate endPoint, Set<GridCoordinate> pointsSoFar, Set<Path> allPaths) {
+        if (entryPoint.equals(endPoint)) {
+            // base case, end recursion
+            return pointsSoFar.size();
         }
-        Junction startJunction = allJunctions.stream().filter(j -> j.location().equals(entryPoint)).findFirst().orElseThrow(IllegalArgumentException::new);
-        Set<Path> exitPaths = new HashSet<>(startJunction.exitPaths());
-        List<GridCoordinate> pointsSoFar = pathSoFar.stream().flatMap(p -> p.interiorPoints().stream()).toList();
-        List<Path> actualExitPaths = exitPaths.stream().filter(exitPath -> Collections.disjoint(exitPath.interiorPoints(), pointsSoFar)).toList();
-        if (actualExitPaths.isEmpty()) {
-            System.out.println("No path exists from " + entryPoint + " to endpoint after " + pathSoFar + ", terminating");
+        if (pointsSoFar.contains(entryPoint)) {
+            // base case, end recursion
             return Integer.MIN_VALUE;
         }
+        pointsSoFar.add(entryPoint);
+        Set<Path> pathOptions = new HashSet<>();
+        allPaths.stream()
+            .filter(p -> p.adjoins(entryPoint))
+            .filter(p -> Collections.disjoint(p.interiorPoints(), pointsSoFar))
+            .forEach(pathOptions::add);
 
-        return actualExitPaths.stream().map(exitPath -> {
-            List<Path> newPathSoFar = new ArrayList<>();
-            newPathSoFar.addAll(pathSoFar);
-            newPathSoFar.add(exitPath);
-            System.out.println("Testing path " + exitPath);
-            return exitPath.length() + longestPathLengthToEndpointFrom(exitPath.endpoint(), endPoint, newPathSoFar, allPaths, allJunctions);
-        }).reduce(Integer::max).orElse(0);
+        int currentMaxLength = Integer.MIN_VALUE;
+        for (Path p : pathOptions) {
+            GridCoordinate otherEnd = p.endPoints.stream().filter(gc -> !gc.equals(entryPoint)).findFirst().orElseThrow(IllegalStateException::new);
+            if (pointsSoFar.contains(otherEnd)) {
+                continue;
+            }
+            Set<GridCoordinate> newPointsSoFar = new HashSet<>();
+            newPointsSoFar.addAll(pointsSoFar);
+            newPointsSoFar.addAll(p.interiorPoints());
+            int thisLength = longestPathLengthToEndpointFrom(otherEnd, endPoint, newPointsSoFar, allPaths);
+            currentMaxLength = Integer.max(currentMaxLength, thisLength);
+        }
+        // if (currentMaxLength >= 6422) {
+        //     System.out.println(currentMaxLength);
+        // }
+        return currentMaxLength;
     }
 
-    private void findPaths(String[][] grid, GridCoordinate entryPoint, GridCoordinate endPoint, Junction precedingJunction, Direction startDirection, Set<Path> allPaths, Set<Junction> allJunctions) {
-        // System.out.println("Entered findPath");
+    private void findPaths(String[][] grid, GridCoordinate entryPoint, GridCoordinate endPoint, Direction startDirection, Set<Path> allPaths) {
         Direction direction = startDirection;
         GridCoordinate currentPoint = entryPoint;
-        int pathLength = 0;
         Set<GridCoordinate> interiorPoints = new HashSet<>();
 
         while (true) {
-            // System.out.println("Looping: pathLength is " + pathLength);
-            pathLength++;
             final Direction currentDirection = direction;
             GridCoordinate nextStep = currentPoint.advance(currentDirection);
-            interiorPoints.add(nextStep);
             Set<Direction> possibleNextDirections = Arrays.stream(Direction.values())
                     .filter(d -> currentDirection.opposite() != d)
                     .filter(d -> nextStep.safeGet(grid).map(d::isValidStep).orElse(false))
@@ -90,11 +108,8 @@ public class Accumulator {
             if (endPoint.equals(nextStep)) {
                 // System.out.println("Endpoint " + endPoint + " reached");
                 // we've reached the end
-                Path thisPath = new Path(pathLength, startDirection, nextStep, interiorPoints);
+                Path thisPath = new Path(Set.of(entryPoint, nextStep), interiorPoints);
                 allPaths.add(thisPath);
-                if (precedingJunction != null) {
-                    precedingJunction.exitPaths.add(thisPath);
-                }
                 return;
             } else if (possibleNextDirections.isEmpty()) {
                 // System.out.println("Dead end reached");
@@ -103,24 +118,20 @@ public class Accumulator {
             } else if (possibleNextDirections.size() == 1) {
                 // we're still traversing a path normally, so just continue
                 currentPoint = nextStep;
+                interiorPoints.add(nextStep);
                 direction = possibleNextDirections.iterator().next();
                 // System.out.println("Must proceed in direction " + direction);
             } else {
                 // we've hit a junction
                 // System.out.println("Junction found at " + nextStep);
-                Junction junctionAtEnd = new Junction(nextStep, new HashSet<Path>());
-                allJunctions.add(junctionAtEnd);
-                Path thisPath = new Path(pathLength, startDirection, nextStep, interiorPoints);
+                Path thisPath = new Path(Set.of(entryPoint, nextStep), interiorPoints);
                 if (!allPaths.add(thisPath)) {
                     // duplicate path found
                     return;
                 }
-                if (precedingJunction != null) {
-                    precedingJunction.exitPaths().add(thisPath);
-                }
                 for (Direction possibleNextDirection : possibleNextDirections) {
                     // System.out.println("Testing path in direction " + possibleNextDirection + " from " + nextStep);
-                    findPaths(grid, nextStep, endPoint, junctionAtEnd, possibleNextDirection, allPaths, allJunctions);
+                    findPaths(grid, nextStep, endPoint, possibleNextDirection, allPaths);
                 }
                 return;
             }
@@ -128,9 +139,9 @@ public class Accumulator {
 
     }
 
-    record Path(int length, Direction startDirection, GridCoordinate endpoint, Set<GridCoordinate> interiorPoints) {
-    }
-
-    record Junction(GridCoordinate location, Set<Path> exitPaths) {
+    record Path(Set<GridCoordinate> endPoints, Set<GridCoordinate> interiorPoints) {
+        boolean adjoins(GridCoordinate point) {
+            return endPoints.contains(point);
+        }
     }
 }
