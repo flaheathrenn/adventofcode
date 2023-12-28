@@ -8,7 +8,7 @@ public class Solver {
         // Set up any initial state
 
         // Process the input line-by-line
-        InputProcessor processor = new InputProcessor("src/day23/testinput.txt");
+        InputProcessor processor = new InputProcessor("src/day23/input.txt");
         Accumulator result = processor.processLines(ParsedLine::new, (parsedLine, accumulator) -> {
             // Update accumulator using parsed line object
             return accumulator.update(parsedLine);

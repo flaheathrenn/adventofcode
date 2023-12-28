@@ -5,6 +5,27 @@ import java.util.Optional;
 public class GridUtils {
     public static enum Direction {
         UP, DOWN, LEFT, RIGHT;
+
+    Direction opposite() {
+            return switch (this) {
+                case UP -> DOWN;
+                case DOWN -> UP;
+                case LEFT -> RIGHT;
+                case RIGHT -> LEFT;
+            };
+        }
+
+    boolean isValidStep(String gridChar) {
+        if (".".equals(gridChar)) {
+            return true;
+        }
+        return switch (this) {
+            case UP -> "^".equals(gridChar);
+            case DOWN -> "v".equals(gridChar);
+            case LEFT -> "<".equals(gridChar);
+            case RIGHT -> ">".equals(gridChar);
+        };
+    }
     }
 
     public static record GridCoordinate(int row, int column) {
