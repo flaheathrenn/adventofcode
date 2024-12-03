@@ -3,6 +3,8 @@ package aoc2024.day3;
 import global.InputProcessor;
 
 public class Solver {
+
+    // NOTE: Remove any newlines from the input before running
     
     public static void main(String[] args) {
         // Set up any initial state
@@ -13,6 +15,6 @@ public class Solver {
             // Update accumulator using parsed line object
             return accumulator.update(parsedLine);
         }, new Accumulator());
-        System.out.println("Star 1 solution: " + result.star1());
+        System.out.println("Star 2 solution: " + result.star1());
     }
 }
