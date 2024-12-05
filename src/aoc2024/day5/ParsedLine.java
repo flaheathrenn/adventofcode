@@ -1,6 +1,5 @@
 package aoc2024.day5;
 
-import java.util.Arrays;
 import java.util.List;
 
 public class ParsedLine {

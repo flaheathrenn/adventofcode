@@ -1,7 +1,6 @@
 package aoc2024.day5;
 
 import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -35,21 +34,17 @@ public class Accumulator {
     }
 
     private void sort(List<String> pages, Set<Rule> rules) {
-        for (int i = 0; i < pages.size(); i++) {
-            String left = pages.get(i);
-            for (int j = i + 1; j < pages.size(); j++) {
-                String right = pages.get(j);
-                if (rules.contains(new Rule(right, left))) {
-                    // swap elements
-                    pages.remove(i);
-                    pages.add(i, right);
-                    pages.remove(j);
-                    pages.add(j, left);
-                    sort(pages, rules);
-                    return;
-                }
+        pages.sort((x, y) -> {
+            if (rules.contains(new Rule(x,y))) {
+                return -1;
             }
-        }
+            if (rules.contains(new Rule(y,x))) {
+                return 1;
+            }
+            // if the following was ever printed it would indicate a potential issue
+            System.out.println("Relationship between " + x + " and " + y + " is ambiguous");
+            return 0;
+        });
     }
 
     // Extract solution
