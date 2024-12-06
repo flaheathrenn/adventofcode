@@ -1,7 +1,9 @@
 package aoc2024.day6;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import aoc2024.day6.GridUtils.Direction;
 import aoc2024.day6.GridUtils.GridCoordinate;
@@ -9,6 +11,7 @@ import aoc2024.day6.GridUtils.GridCoordinate;
 public class Accumulator {
     // State
     List<String[]> rows = new ArrayList<>();
+    Set<GridCoordinate> originalPath = new HashSet<>();
 
     // Update state from parsed line
     public Accumulator update(ParsedLine parsedLine) {
@@ -22,6 +25,7 @@ public class Accumulator {
         GridCoordinate currentLocation = GridUtils.find(grid, "^");
         Direction currentDirection = Direction.UP;
         while (currentLocation.isWithin(grid)) {
+            originalPath.add(currentLocation);
             GridCoordinate nextLocation = currentLocation.step(currentDirection);
             if (nextLocation.read(grid).equals("#")) {
                 currentDirection = currentDirection.rotate(); // hit an obstacle
@@ -38,27 +42,20 @@ public class Accumulator {
         long count = 0;
         String[][] grid = GridUtils.deepCopyOf(rows.toArray(new String[0][0]));
         GridCoordinate startLocation = GridUtils.find(grid, "^");
-        for (int i = 0; i < grid.length; i++) {
-            for (int j = 0; j < grid[i].length; j++) {
-                GridCoordinate obstacleLocation = new GridCoordinate(i, j);
-                if (obstacleLocation.equals(startLocation)) {
-                    continue;
-                }
-                if (obstacleLocation.read(grid).equals("#")) {
-                    continue;
-                }
-                String[][] testGrid = GridUtils.deepCopyOf(grid);
-                obstacleLocation.write(testGrid, "#");
-                startLocation.write(testGrid, ".");
-                if (doesLoopWithObstacle(testGrid, startLocation)) {
-                    count++;
-                }
+        originalPath.remove(startLocation);
+        for (GridCoordinate obstacleLocation : originalPath) {
+            String[][] testGrid = GridUtils.deepCopyOf(grid);
+            obstacleLocation.write(testGrid, "#");
+            startLocation.write(testGrid, "."); // to avoid finding the starting ^
+                                                        // being treated as a loop
+            if (doesLoop(testGrid, startLocation)) {
+                count++;
             }
         }
         return String.valueOf(count);
     }
 
-    private boolean doesLoopWithObstacle(String[][] grid, GridCoordinate startLocation) {
+    private boolean doesLoop(String[][] grid, GridCoordinate startLocation) {
         GridCoordinate currentLocation = startLocation;
         Direction currentDirection = Direction.UP;
         while (currentLocation.isWithin(grid)) {
