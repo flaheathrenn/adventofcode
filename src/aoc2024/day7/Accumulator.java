@@ -9,7 +9,6 @@ public class Accumulator {
 
     // Update state from parsed line
     public Accumulator update(ParsedLine parsedLine) {
-        // System.out.println("Target " + parsedLine.target + " using numbers " + parsedLine.elements);
         if (star1composable(parsedLine.target, parsedLine.elements)) {
             star1solution += parsedLine.target;
         }
@@ -21,13 +20,10 @@ public class Accumulator {
 
     private boolean star1composable(long target, List<Long> elements) {
         if (elements.size() == 1) {
-            // System.out.println("Base case: does " + target + " equal only element " + elements.get(0) + "?");
-            // System.out.println((target == elements.get(0)) ? "YES!" : "NO!");
             return target == elements.get(0);
         }
         long lastElement = elements.get(elements.size() - 1);
         if (target < lastElement) {
-            // System.out.println("Base case: " + target + " is less than last element " + elements.get(0) + ", so FALSE");
             return false;
         }
         if (star1composable(target - lastElement, listWithoutLastElement(elements))) {
@@ -41,19 +37,16 @@ public class Accumulator {
 
     private boolean star2composable(long target, List<Long> elements) {
         if (elements.size() == 1) {
-            // System.out.println("Base case: does " + target + " equal only element " + elements.get(0) + "?");
-            // System.out.println((target == elements.get(0)) ? "YES!" : "NO!");
             return target == elements.get(0);
         }
         long lastElement = elements.get(elements.size() - 1);
         if (target < lastElement) {
-            // System.out.println("Base case: " + target + " is less than last element " + elements.get(0) + ", so FALSE");
             return false;
         }
         if (star2composable(target - lastElement, listWithoutLastElement(elements))) {
             return true;
         }
-        if (target != lastElement && String.valueOf(target).endsWith(String.valueOf(lastElement)) && star2composable(remove(target, lastElement), listWithoutLastElement(elements))) {
+        if (target != lastElement && endsWith(target, lastElement) && star2composable(remove(target, lastElement), listWithoutLastElement(elements))) {
             return true;
         }
         if (target % lastElement == 0 && star2composable(target / lastElement, listWithoutLastElement(elements))) {
@@ -62,10 +55,12 @@ public class Accumulator {
         return false;
     }
 
+    private boolean endsWith(long target, long element) {
+        return target % Math.pow(10, Math.round(Math.ceil(Math.log10(element)))) == element;
+    }
+
     private long remove(long target, long element) {
-        String targetString = String.valueOf(target);
-        String elementString = String.valueOf(element);
-        return Long.parseLong(targetString.substring(0, targetString.length() - elementString.length()));
+        return (target - element) / Math.round(Math.pow(10, Math.ceil(Math.log10(element))));
     }
 
     private <T> List<T> listWithoutLastElement(List<T> longList) {
