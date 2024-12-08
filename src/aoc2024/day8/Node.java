@@ -4,12 +4,22 @@ import java.util.HashSet;
 import java.util.Set;
 
 public record Node(int x, int y) {
-    public Set<Node> antiNodesWith(Node other) {
+    public Set<Node> antiNodesWith(Node other, int maxX, int maxY) {
         int xDiff = other.x() - x;
         int yDiff = other.y() - y;
         Set<Node> antiNodeSet = new HashSet<>();
-        antiNodeSet.add(new Node(other.x() + xDiff, other.y() + yDiff));
-        antiNodeSet.add(new Node(x - xDiff, y - yDiff));
+        // go in one direction from other
+        Node currentNode = other;
+        while (currentNode.isInBounds(maxX, maxY)) {
+            antiNodeSet.add(currentNode);
+            currentNode = new Node(currentNode.x() + xDiff, currentNode.y() + yDiff);
+        }
+        // and now in the other direction
+        currentNode = this;
+        while (currentNode.isInBounds(maxX, maxY)) {
+            antiNodeSet.add(currentNode);
+            currentNode = new Node(currentNode.x() - xDiff, currentNode.y() - yDiff);
+        }
         return antiNodeSet;
     }
 

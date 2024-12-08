@@ -36,11 +36,11 @@ public class Accumulator {
     }
 
     // Extract solution
-    public String star1() {
+    public String star2() {
         for (List<Node> freqNodes : nodes.values()) {
             for (int i = 0; i < freqNodes.size(); i++) {
                 for (int j = i + 1; j < freqNodes.size(); j++) {
-                    antiNodeSet.addAll(freqNodes.get(i).antiNodesWith(freqNodes.get(j)));
+                    antiNodeSet.addAll(freqNodes.get(i).antiNodesWith(freqNodes.get(j), maxX, currentRow - 1));
                 }
             }
         }
