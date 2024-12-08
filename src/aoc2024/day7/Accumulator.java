@@ -9,16 +9,16 @@ public class Accumulator {
 
     // Update state from parsed line
     public Accumulator update(ParsedLine parsedLine) {
-        if (star1composable(parsedLine.target, parsedLine.elements)) {
+        if (composable(parsedLine.target, parsedLine.elements, false)) {
             star1solution += parsedLine.target;
         }
-        if (star2composable(parsedLine.target, parsedLine.elements)) {
+        if (composable(parsedLine.target, parsedLine.elements, true)) {
             star2solution += parsedLine.target;
         }
         return this;
     }
 
-    private boolean star1composable(long target, List<Long> elements) {
+    private boolean composable(long target, List<Long> elements, boolean isStar2) {
         if (elements.size() == 1) {
             return target == elements.get(0);
         }
@@ -26,30 +26,13 @@ public class Accumulator {
         if (target < lastElement) {
             return false;
         }
-        if (star1composable(target - lastElement, listWithoutLastElement(elements))) {
+        if (composable(target - lastElement, listWithoutLastElement(elements), isStar2)) {
             return true;
         }
-        if (target % lastElement == 0 && star1composable(target / lastElement, listWithoutLastElement(elements))) {
+        if (isStar2 && endsWith(target, lastElement) && composable(remove(target, lastElement), listWithoutLastElement(elements), isStar2)) {
             return true;
         }
-        return false;
-    }
-
-    private boolean star2composable(long target, List<Long> elements) {
-        if (elements.size() == 1) {
-            return target == elements.get(0);
-        }
-        long lastElement = elements.get(elements.size() - 1);
-        if (target < lastElement) {
-            return false;
-        }
-        if (star2composable(target - lastElement, listWithoutLastElement(elements))) {
-            return true;
-        }
-        if (target != lastElement && endsWith(target, lastElement) && star2composable(remove(target, lastElement), listWithoutLastElement(elements))) {
-            return true;
-        }
-        if (target % lastElement == 0 && star2composable(target / lastElement, listWithoutLastElement(elements))) {
+        if (target % lastElement == 0 && composable(target / lastElement, listWithoutLastElement(elements), isStar2)) {
             return true;
         }
         return false;
