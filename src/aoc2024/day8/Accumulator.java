@@ -11,6 +11,7 @@ public class Accumulator {
     // State
     int currentRow = 0;
     int maxX = 0;
+    int maxY = 0;
     Map<String, List<Node>> nodes = new HashMap<>();
     Set<Node> antiNodeSet = new HashSet<>();
 
@@ -32,20 +33,26 @@ public class Accumulator {
         }
         currentRow++;
         maxX = parsedLine.row.length - 1;
+        maxY = currentRow - 1;
         return this;
     }
 
     // Extract solution
-    public String star2() {
+    public String star(boolean isStar2) {
         for (List<Node> freqNodes : nodes.values()) {
             for (int i = 0; i < freqNodes.size(); i++) {
                 for (int j = i + 1; j < freqNodes.size(); j++) {
-                    antiNodeSet.addAll(freqNodes.get(i).antiNodesWith(freqNodes.get(j), maxX, currentRow - 1));
+                    if (isStar2) {
+                        antiNodeSet.addAll(freqNodes.get(i).antiNodesWith(freqNodes.get(j), maxX, maxY));
+                    } else {
+                        antiNodeSet.addAll(freqNodes.get(i).antiNodesWith(freqNodes.get(j)));
+                    }
                 }
             }
         }
-        antiNodeSet.removeIf(x -> !x.isInBounds(maxX, currentRow - 1));
-        System.out.println(antiNodeSet);
+        if (!isStar2) { // not necessary if star2
+            antiNodeSet.removeIf(x -> !x.isInBounds(maxX, maxY));
+        }
         return String.valueOf(antiNodeSet.size());
     }
 }
