@@ -1,5 +1,7 @@
 package global;
 
+import java.util.function.BiFunction;
+
 public interface GridUtils {
     public static enum Direction {
         UP, RIGHT, DOWN, LEFT;
@@ -26,9 +28,9 @@ public interface GridUtils {
         /**
          * @return the contents of the grid at this coordinate, or empty string if coordinate is outside grid
          */
-        public String read(String[][] grid) {
+        public <T> T read(T[][] grid) {
             if (!isWithin(grid)) {
-                return "";
+                return null;
             }
             return grid[i][j];
         }
@@ -36,7 +38,7 @@ public interface GridUtils {
         /**
          * @return true if write was successful, false otherwise (i.e. target was outside the grid)
          */
-        public boolean write(String[][] grid, String content) {
+        public <T> boolean write(T[][] grid, T content) {
             if (!isWithin(grid)) {
                 return false;
             }
@@ -44,7 +46,7 @@ public interface GridUtils {
             return true;
         }
 
-        public boolean isWithin(String[][] grid) {
+        public <T> boolean isWithin(T[][] grid) {
             if (i < 0 || i >= grid.length) {
                 return false;
             }
@@ -69,7 +71,7 @@ public interface GridUtils {
         }
     }
 
-    public static GridCoordinate find (String[][] grid, String target) {
+    public static <T> GridCoordinate find(T[][] grid, T target) {
         for (int i = 0; i < grid.length; i++) {
             for (int j = 0; j < grid[i].length; j++) {
                 if (new GridCoordinate(i, j).read(grid).equals(target)) {
@@ -80,10 +82,22 @@ public interface GridUtils {
         return null;
     }
 
-    public static void prettyPrint(String[][] grid) {
-        for (String[] row : grid) {
-            for (String item : row) {
-                System.out.print(item + " ");
+    public static <T> GridCoordinate find(T[][] grid, T target, BiFunction<T, T, Boolean> equals) {
+        for (int i = 0; i < grid.length; i++) {
+            for (int j = 0; j < grid[i].length; j++) {
+                if (equals.apply(new GridCoordinate(i, j).read(grid), target)) {
+                    return new GridCoordinate(i, j);
+                }
+            }
+        }
+        return null;
+    }
+
+    public static <T> void prettyPrint(T[][] grid) {
+        for (T[] row : grid) {
+            for (T item : row) {
+
+                System.out.print(item == null ? " " : String.valueOf(item));
             }
             System.out.println();
         }
@@ -94,6 +108,18 @@ public interface GridUtils {
         for (String[] row : grid) {
             for (String item : row) {
                 if (item.equals(target)) {
+                    count++;
+                }
+            }
+        }
+        return count;
+    }
+
+    public static <T> long count(T[][] grid, T target, BiFunction<T, T, Boolean> equals) {
+        long count = 0L;
+        for (T[] row : grid) {
+            for (T item : row) {
+                if (equals.apply(item, target)) {
                     count++;
                 }
             }
