@@ -17,6 +17,7 @@ public class Accumulator {
         for (int i = 0; i < blinks; i++) {
             stones = stones.blink();
         }
+        System.out.println(stones);
         return Long.toString(stones.size());
     }
 }

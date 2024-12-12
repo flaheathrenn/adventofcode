@@ -49,4 +49,8 @@ public class StoneDirectory {
         int halfLength = (((int) Math.log10(startStone)) + 1) / 2;
         return startStone % Math.round(Math.pow(10, halfLength));
     }
+
+    public String toString() {
+        return stones.entrySet().stream().sorted((e1, e2) -> e1.getValue().compareTo(e2.getValue())).toList().toString();
+    }
 }
