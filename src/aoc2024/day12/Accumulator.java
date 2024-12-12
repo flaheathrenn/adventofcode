@@ -33,6 +33,8 @@ public class Accumulator {
                 char charAt = grid[i][j];
                 boolean equalsLeft = j != 0 && charAt == grid[i][j-1];
                 boolean equalsUp = i != 0 && charAt == grid[i-1][j];
+                boolean equalsUpAndLeft = i != 0 && j != 0 && charAt == grid[i-1][j-1];
+                boolean equalsUpAndRight = i != 0 && j != grid[i].length - 1 && charAt == grid[i-1][j+1];
                 if (!equalsLeft && !equalsUp) {
                     // new region
                     long newRegionId = regionIdGen.nextLong();
@@ -65,6 +67,30 @@ public class Accumulator {
                         regionStatsDb.get(oldRegionIdUp).addOneSpaceNoPerim();
                     }
                 }
+
+                // star 2 stuff
+                RegionStats myRegion = regionStatsDb.get(regionForGridCoordinate.get(new GridCoordinate(i, j)));
+                if (!equalsLeft && !equalsUp) {
+                    myRegion.sides = 4; // initialise to four sides
+                } else if (equalsUp && !equalsLeft && !equalsUpAndLeft && !equalsUpAndRight) {
+                    // noop
+                } else if (!equalsUp && equalsLeft && !equalsUpAndLeft) {
+                    // noop
+                } else if (equalsUp && equalsLeft && !equalsUpAndRight) {
+                    myRegion.addSides(-2);
+                } else if (equalsUp && equalsLeft && equalsUpAndRight) {
+                    // noop
+                } else if (equalsUp && !equalsLeft && equalsUpAndRight && equalsUpAndLeft) {
+                    myRegion.addSides(4);
+                } else if (equalsUp && !equalsLeft && !equalsUpAndRight && equalsUpAndLeft) {
+                    myRegion.addSides(2);
+                } else if (!equalsUp && equalsLeft && equalsUpAndLeft) {
+                    myRegion.addSides(2);
+                } else if (equalsUp && !equalsLeft && equalsUpAndRight && !equalsUpAndLeft) {
+                    myRegion.addSides(2);
+                } else {
+                    System.out.println("Uncovered branch: " + (equalsLeft ? "0" : "1") + (equalsUp ? "0" : "1") + (equalsUpAndLeft ? "0" : "1") + (equalsUpAndRight ? "0" : "1"));
+                }
             }
         }
     }
@@ -75,6 +101,15 @@ public class Accumulator {
         for (RegionStats entry : regionStatsDb.values()) {
             // System.out.println("Region has area " + entry.area + " and perimeter " + entry.perimeter);
             totalPrice += entry.area * entry.perimeter;
+        }
+        return Long.toString(totalPrice);
+    }
+
+    public String star2() {
+        long totalPrice = 0;
+        for (RegionStats entry : regionStatsDb.values()) {
+            // System.out.println("Region has area " + entry.area + " and sides " + entry.sides);
+            totalPrice += entry.area * entry.sides;
         }
         return Long.toString(totalPrice);
     }
@@ -94,10 +129,15 @@ public class Accumulator {
     public static class RegionStats {
         private int area = 0;
         private int perimeter = 0;
+        private int sides = 0;
 
         public RegionStats(int area, int perimeter) {
             this.area = area;
             this.perimeter = perimeter;
+        }
+
+        public void addSides(int add) {
+            this.sides += add;
         }
 
         public void addOneSpace() {
@@ -118,6 +158,7 @@ public class Accumulator {
             // Y  -> XX
             this.area = this.area + other.area + 1;
             this.perimeter = this.perimeter + other.perimeter;
+            this.sides = this.sides + other.sides;
         }
     }
 }
