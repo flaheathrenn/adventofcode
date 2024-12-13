@@ -8,8 +8,8 @@ public class ParsedLine {
     }
 
     LineType type;
-    int xVal;
-    int yVal;
+    long xVal;
+    long yVal;
 
     // Parsing
     public ParsedLine(String line) {
@@ -25,8 +25,12 @@ public class ParsedLine {
             type = LineType.BBUTT;
         }
         String[] splitLine = line.split("[=+,]");
-        xVal = Integer.parseInt(splitLine[1]);
-        yVal = Integer.parseInt(splitLine[3]);
+        xVal = Long.parseLong(splitLine[1]);
+        yVal = Long.parseLong(splitLine[3]);
+        if (type == LineType.PRIZE) { // comment this if out to return to star 1
+            xVal += 10000000000000L;
+            yVal += 10000000000000L;
+        }
     }
 
 }
