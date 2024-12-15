@@ -23,6 +23,16 @@ public interface GridUtils {
                 case LEFT -> "<";
             };
         }
+
+        public static Direction fromChar(char x) {
+            return switch (x) {
+                case '^' -> UP;
+                case '>' -> RIGHT;
+                case 'v' -> DOWN;
+                case '<' -> LEFT;
+                default -> throw new IllegalArgumentException();
+            };
+        }
     }
     public static record GridCoordinate(int i, int j) {
         /**
