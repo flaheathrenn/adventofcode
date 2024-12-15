@@ -13,6 +13,6 @@ public class Solver {
             // Update accumulator using parsed line object
             return accumulator.update(parsedLine);
         }, new Accumulator());
-        System.out.println("Star 1 solution: " + result.star2());
+        System.out.println("Star 2 solution: " + result.star2());
     }
 }
