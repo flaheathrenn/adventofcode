@@ -200,7 +200,7 @@ public class Accumulator {
         }
     }
 
-    public static enum Direction {
+    static enum Direction {
         UP, LEFT, DOWN, RIGHT;
 
         Direction opposite() {

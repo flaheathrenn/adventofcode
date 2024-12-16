@@ -85,7 +85,7 @@ public class Accumulator {
             && sPositions.contains(directionalFunction.apply(xCoordinate, 3));
     }
 
-    public static record GridCoordinate(int row, int column) {
+    static record GridCoordinate(int row, int column) {
         public GridCoordinate up(int spaces) {
             return new GridCoordinate(row - spaces, column);
         }

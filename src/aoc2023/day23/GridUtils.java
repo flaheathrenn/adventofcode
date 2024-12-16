@@ -2,11 +2,11 @@ package aoc2023.day23;
 
 import java.util.Optional;
 
-public class GridUtils {
-    public static enum Direction {
+class GridUtils {
+    static enum Direction {
         UP, DOWN, LEFT, RIGHT;
 
-    Direction opposite() {
+        Direction opposite() {
             return switch (this) {
                 case UP -> DOWN;
                 case DOWN -> UP;
@@ -15,20 +15,20 @@ public class GridUtils {
             };
         }
 
-    boolean isValidStep(String gridChar) {
-        if (".".equals(gridChar)) {
-            return true;
+        boolean isValidStep(String gridChar) {
+            if (".".equals(gridChar)) {
+                return true;
+            }
+            return switch (this) {
+                case UP -> "^".equals(gridChar);
+                case DOWN -> "v".equals(gridChar);
+                case LEFT -> "<".equals(gridChar);
+                case RIGHT -> ">".equals(gridChar);
+            };
         }
-        return switch (this) {
-            case UP -> "^".equals(gridChar);
-            case DOWN -> "v".equals(gridChar);
-            case LEFT -> "<".equals(gridChar);
-            case RIGHT -> ">".equals(gridChar);
-        };
-    }
     }
 
-    public static record GridCoordinate(int row, int column) implements Comparable<GridCoordinate> {
+    static record GridCoordinate(int row, int column) implements Comparable<GridCoordinate> {
         public Optional<String> safeGet(String[][] grid) {
             if (row < 0 || column < 0 || row >= grid.length || column >= grid[0].length) {
                 return Optional.empty();

@@ -15,6 +15,15 @@ public interface GridUtils {
             };
         }
 
+        public Direction flip() {
+            return switch (this) {
+                case UP -> DOWN;
+                case RIGHT -> LEFT;
+                case DOWN -> UP;
+                case LEFT -> RIGHT;
+            };
+        }
+
         String marker() {
             return switch (this) {
                 case UP -> "^";

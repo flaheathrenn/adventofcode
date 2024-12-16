@@ -1,4 +1,4 @@
-package aoc2023.day18;
+package aoc2023.day21;
 
 class GridUtils {
     public static void printGrid(String[][] grid) {

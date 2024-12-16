@@ -5,7 +5,8 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
-import aoc2023.day18.GridUtils.Direction;
+
+import aoc2023.day21.GridUtils.Direction;
 
 public class AccumulatorForStar2 {
 

@@ -2,8 +2,8 @@ package aoc2024.day6;
 
 import java.util.Arrays;
 
-public interface GridUtils {
-    public static enum Direction {
+interface GridUtils {
+    static enum Direction {
         UP, RIGHT, DOWN, LEFT;
     
         Direction rotate() {
@@ -24,7 +24,7 @@ public interface GridUtils {
             };
         }
     }
-    public static record GridCoordinate(int i, int j) {
+    static record GridCoordinate(int i, int j) {
         /**
          * @return the contents of the grid at this coordinate, or empty string if coordinate is outside grid
          */

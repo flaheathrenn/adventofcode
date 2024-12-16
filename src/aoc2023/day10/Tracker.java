@@ -102,7 +102,7 @@ public class Tracker {
         }
     }
 
-    public static enum Direction {
+    static enum Direction {
         NORTH,
         WEST,
         SOUTH,
