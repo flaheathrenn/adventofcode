@@ -6,7 +6,7 @@ public interface GridUtils {
     public static enum Direction {
         UP, RIGHT, DOWN, LEFT;
     
-        Direction rotate() {
+        public Direction rotate() {
             return switch (this) {
                 case UP -> RIGHT;
                 case RIGHT -> DOWN;
@@ -24,7 +24,7 @@ public interface GridUtils {
             };
         }
 
-        String marker() {
+        public String marker() {
             return switch (this) {
                 case UP -> "^";
                 case RIGHT -> ">";
@@ -44,12 +44,25 @@ public interface GridUtils {
         }
     }
     public static record GridCoordinate(int i, int j) {
+
+        @Override
+        public String toString() {
+            return String.format("[%d,%d]", i, j);
+        }
+
         /**
          * @return the contents of the grid at this coordinate, or empty string if coordinate is outside grid
          */
         public <T> T read(T[][] grid) {
             if (!isWithin(grid)) {
                 return null;
+            }
+            return grid[i][j];
+        }
+
+        public int read(int[][] grid) {
+            if (!isWithin(grid)) {
+                throw new IllegalArgumentException();
             }
             return grid[i][j];
         }
@@ -66,6 +79,16 @@ public interface GridUtils {
         }
 
         public <T> boolean isWithin(T[][] grid) {
+            if (i < 0 || i >= grid.length) {
+                return false;
+            }
+            if (j < 0 || j >= grid[i].length) {
+                return false;
+            }
+            return true;
+        }
+
+        public boolean isWithin(int[][] grid) {
             if (i < 0 || i >= grid.length) {
                 return false;
             }
@@ -115,7 +138,6 @@ public interface GridUtils {
     public static <T> void prettyPrint(T[][] grid) {
         for (T[] row : grid) {
             for (T item : row) {
-
                 System.out.print(item == null ? " " : String.valueOf(item));
             }
             System.out.println();
