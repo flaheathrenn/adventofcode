@@ -11,6 +11,7 @@ import java.util.Queue;
 import java.util.Set;
 
 import global.GridUtils.Direction;
+import global.GridUtils.DirectionFullCompass;
 import global.GridUtils.GridCoordinate;
 
 public class Accumulator {
@@ -50,33 +51,38 @@ public class Accumulator {
     }
 
     public String star2() {
-        // init map
-        Map<GridCoordinate, Set<Edge>> edgesFromNode = new HashMap<>();
-        for (int i = 0; i < MEMORY_SPACE_SIZE; i++) {
-            for (int j = 0; j < MEMORY_SPACE_SIZE; j++) {
-                GridCoordinate here = new GridCoordinate(i, j);
-                edgesFromNode.put(here, new HashSet<>());
-                for (Direction d : Direction.values()) {
-                    GridCoordinate adj = here.step(d);
-                    if (adj.isWithin(MEMORY_SPACE_SIZE)) {
-                        edgesFromNode.get(here).add(new Edge(adj, 1));
+        Set<WallGroup> groups = new HashSet<>();
+
+        for (GridCoordinate fallingByte : bytesList) {
+            Set<GridCoordinate> adjacent = new HashSet<>();
+            for (DirectionFullCompass d : DirectionFullCompass.values()) {
+                GridCoordinate adj = fallingByte.step(d);
+                if (adj.isWithin(MEMORY_SPACE_SIZE)) {
+                    adjacent.add(adj);
+                }
+            }
+            List<WallGroup> matchingGroups = groups.stream()
+                    .filter(g -> !Collections.disjoint(g.contents, adjacent)).toList();
+            if (matchingGroups.isEmpty()) {
+                // no adjacencies, add as new group
+                WallGroup newGroup = new WallGroup(fallingByte);
+                groups.add(newGroup);
+            } else {
+                WallGroup addTo = matchingGroups.get(0);
+                addTo.add(fallingByte);
+                if (matchingGroups.size() > 1) {
+                    for (WallGroup otherGroup : matchingGroups.subList(1, matchingGroups.size())) {
+                        for (GridCoordinate c : otherGroup.contents) {
+                            addTo.add(c);
+                        }
                     }
+                }
+                if (addTo.isSpanning(MEMORY_SPACE_SIZE)) {
+                    return fallingByte.toString();
                 }
             }
         }
-        GridCoordinate startNode = new GridCoordinate(0, 0);
-        GridCoordinate endNode = new GridCoordinate(MEMORY_SPACE_SIZE - 1, MEMORY_SPACE_SIZE - 1);
-
-        for (GridCoordinate fallingByte : bytesList) {
-            try {
-                edgesFromNode.put(fallingByte, Collections.emptySet()); // remove paths out of corrupted space
-                shortestPath(startNode, endNode, edgesFromNode);
-            } catch (IllegalStateException e) {
-                return fallingByte.toString();
-            }
-        }
-
-        return "Exhaused byte list with no blocking";
+        return "Exhausted byte list with no blocking";
     }
 
     int shortestPath(GridCoordinate startNode, GridCoordinate endNode, Map<GridCoordinate, Set<Edge>> edgesFromNode) {

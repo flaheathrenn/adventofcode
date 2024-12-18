@@ -43,6 +43,11 @@ public interface GridUtils {
             };
         }
     }
+
+    public static enum DirectionFullCompass {
+        UP, RIGHT, DOWN, LEFT, UPLEFT, UPRIGHT, DOWNLEFT, DOWNRIGHT;
+    }
+
     public static record GridCoordinate(int i, int j) {
 
         @Override
@@ -117,6 +122,20 @@ public interface GridUtils {
             int newJ = switch (direction) {
                 case LEFT -> j - 1;
                 case RIGHT -> j + 1;
+                case UP, DOWN -> j;
+            };
+            return new GridCoordinate(newI, newJ);
+        }
+
+        public GridCoordinate step(DirectionFullCompass direction) {
+            int newI = switch (direction) {
+                case UP, UPLEFT, UPRIGHT -> i - 1;
+                case DOWN, DOWNLEFT, DOWNRIGHT -> i + 1;
+                case LEFT, RIGHT -> i;
+            };
+            int newJ = switch (direction) {
+                case LEFT, UPLEFT, DOWNLEFT -> j - 1;
+                case RIGHT, UPRIGHT, DOWNRIGHT -> j + 1;
                 case UP, DOWN -> j;
             };
             return new GridCoordinate(newI, newJ);
