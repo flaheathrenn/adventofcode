@@ -98,6 +98,16 @@ public interface GridUtils {
             return true;
         }
 
+        public boolean isWithin(int gridSize) {
+            if (i < 0 || i >= gridSize) {
+                return false;
+            }
+            if (j < 0 || j >= gridSize) {
+                return false;
+            }
+            return true;
+        }
+
         public GridCoordinate step(Direction direction) {
             int newI = switch (direction) {
                 case UP -> i - 1;
