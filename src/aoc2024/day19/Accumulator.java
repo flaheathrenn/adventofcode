@@ -11,7 +11,6 @@ public class Accumulator {
     Set<String> designs;
     long possibleDisplays = 0;
     long possibleWays = 0;
-    Map<String, Long> memo = new HashMap<>();
 
     // Update state from parsed line
     public Accumulator update(ParsedLine parsedLine) {
@@ -33,7 +32,8 @@ public class Accumulator {
         if (isPossible(parsedLine.design, designs)) {
             possibleDisplays++;
         }
-        possibleWays += possibleWays(parsedLine.design, designs);
+        Map<String, Long> memo = new HashMap<>();
+        possibleWays += possibleWays(parsedLine.design, designs, memo);
         return this;
     }
 
@@ -52,7 +52,7 @@ public class Accumulator {
         return false;
     }
 
-    private long possibleWays(String target, Set<String> designs) {
+    private long possibleWays(String target, Set<String> designs, Map<String, Long> memo) {
         if (target.isBlank()) {
             return 1L;
         }
@@ -62,7 +62,7 @@ public class Accumulator {
         long possibleWays = 0L;
         for (String design : designs) {
             if (target.endsWith(design)) {
-                possibleWays += possibleWays(target.substring(0, target.length() - design.length()), designs);
+                possibleWays += possibleWays(target.substring(0, target.length() - design.length()), designs, memo);
             }
         }
         memo.put(target, possibleWays);
