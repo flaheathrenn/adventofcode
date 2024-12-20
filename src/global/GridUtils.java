@@ -56,7 +56,7 @@ public interface GridUtils {
         }
 
         /**
-         * @return the contents of the grid at this coordinate, or empty string if coordinate is outside grid
+         * @return the contents of the grid at this coordinate
          */
         public <T> T read(T[][] grid) {
             if (!isWithin(grid)) {
@@ -103,6 +103,16 @@ public interface GridUtils {
             return true;
         }
 
+        public boolean isWithin(char[][] grid) {
+            if (i < 0 || i >= grid.length) {
+                return false;
+            }
+            if (j < 0 || j >= grid[i].length) {
+                return false;
+            }
+            return true;
+        }
+
         public boolean isWithin(int gridSize) {
             if (i < 0 || i >= gridSize) {
                 return false;
@@ -140,12 +150,27 @@ public interface GridUtils {
             };
             return new GridCoordinate(newI, newJ);
         }
+
+        public int manhattanDistance(GridCoordinate other) {
+            return Math.abs(this.i - other.i()) + Math.abs(this.j - other.j());
+        }
     }
 
     public static <T> GridCoordinate find(T[][] grid, T target) {
         for (int i = 0; i < grid.length; i++) {
             for (int j = 0; j < grid[i].length; j++) {
                 if (new GridCoordinate(i, j).read(grid).equals(target)) {
+                    return new GridCoordinate(i, j);
+                }
+            }
+        }
+        return null;
+    }
+
+    public static GridCoordinate find(char[][] grid, char target) {
+        for (int i = 0; i < grid.length; i++) {
+            for (int j = 0; j < grid[i].length; j++) {
+                if (grid[i][j] == target) {
                     return new GridCoordinate(i, j);
                 }
             }
