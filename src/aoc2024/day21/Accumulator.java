@@ -86,7 +86,7 @@ public class Accumulator {
                 default -> throw new IllegalArgumentException();
             };
             case "^" -> switch (end) {
-                case "<" -> "<v";
+                case "<" -> "v<";
                 case "v" -> "v";
                 case ">" -> "v>";
                 case "^" -> "";
@@ -113,7 +113,7 @@ public class Accumulator {
                 case "<" -> "";
                 case "v" -> ">";
                 case ">" -> ">>";
-                case "^" -> "^>";
+                case "^" -> ">^";
                 case "A" -> ">>^";
                 default -> throw new IllegalArgumentException();
             };
