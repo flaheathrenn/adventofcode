@@ -14,5 +14,9 @@ public class Solver {
             return accumulator.update(parsedLine);
         }, new Accumulator());
         System.out.println("Star 1 solution: " + result.star1());
+        /**
+         * Star 2 answer needs to be b/w 132065772256606 and 218444584273060
+         */
+        System.out.println("Star 2 solution: " + result.star2());
     }
 }
