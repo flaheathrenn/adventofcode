@@ -1,4 +1,4 @@
-package template;
+package aoc2024.day24;
 
 public class Accumulator {
     // State
