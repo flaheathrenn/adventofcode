@@ -65,7 +65,7 @@ public class Accumulator {
         while (currentCliques.size() != 1) {
             currentCliques = nextCliques(currentCliques);
         }
-        // technically this doesn't cover the case where there's only clique but it could still be larger
+        // technically this doesn't cover the case where there's only one clique but it could still be larger
         // but whatever it still worked on my input
         return currentCliques.stream().findFirst().orElse(Collections.emptySet()).stream().sorted().collect(Collectors.joining(","));
     }
