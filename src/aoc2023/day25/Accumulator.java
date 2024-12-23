@@ -1,12 +1,8 @@
 package aoc2023.day25;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.LinkedList;
-import java.util.List;
 import java.util.Map;
-import java.util.Queue;
 import java.util.Set;
 
 public class Accumulator {
@@ -126,21 +122,21 @@ public class Accumulator {
         // return "";
     }
 
-    private int maxReachable(Set<String> allNodes, Set<Set<String>> reducedConnections) {
-        String startNode = allNodes.stream().findAny().orElseThrow(IllegalStateException::new);
-        Set<String> visitedNodes = new HashSet<>();
-        Queue<String> nodesToVisit = new LinkedList<>();
-        nodesToVisit.add(startNode);
-        while (nodesToVisit.size() != 0) {
-            String visit = nodesToVisit.poll();
-            visitedNodes.add(visit);
-            reducedConnections.stream().filter(c -> c.contains(visit)).forEach(c -> {
-                String other = c.stream().filter(n -> !visit.equals(n)).findAny().orElseThrow(IllegalStateException::new);
-                if (!visitedNodes.contains(other)) {
-                    nodesToVisit.add(other);
-                }
-            });
-        }
-        return visitedNodes.size();
-    }
+    // private int maxReachable(Set<String> allNodes, Set<Set<String>> reducedConnections) {
+    //     String startNode = allNodes.stream().findAny().orElseThrow(IllegalStateException::new);
+    //     Set<String> visitedNodes = new HashSet<>();
+    //     Queue<String> nodesToVisit = new LinkedList<>();
+    //     nodesToVisit.add(startNode);
+    //     while (nodesToVisit.size() != 0) {
+    //         String visit = nodesToVisit.poll();
+    //         visitedNodes.add(visit);
+    //         reducedConnections.stream().filter(c -> c.contains(visit)).forEach(c -> {
+    //             String other = c.stream().filter(n -> !visit.equals(n)).findAny().orElseThrow(IllegalStateException::new);
+    //             if (!visitedNodes.contains(other)) {
+    //                 nodesToVisit.add(other);
+    //             }
+    //         });
+    //     }
+    //     return visitedNodes.size();
+    // }
 }
