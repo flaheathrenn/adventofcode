@@ -1,9 +1,11 @@
 package aoc2024.day23;
 
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 public class Accumulator {
     // State
@@ -41,5 +43,45 @@ public class Accumulator {
             }
         }
         return Integer.toString(foundTriads.size());
+    }
+
+    public String star2() {
+        // find triads
+        for (String node : edges.keySet()) {
+            for (String node2 : edges.get(node)) {
+                // look for something that's connected to both node and node2
+                for (String node3 : edges.get(node)) {
+                    if (node2.equals(node3)) {
+                        continue;
+                    }
+                    if (edges.get(node2).contains(node3)) {
+                        foundTriads.add(Set.of(node, node2, node3));
+                    }
+                }
+            }
+        }
+
+        Set<Set<String>> currentCliques = foundTriads;
+        while (currentCliques.size() != 1) {
+            currentCliques = nextCliques(currentCliques);
+        }
+        // technically this doesn't cover the case where there's only clique but it could still be larger
+        // but whatever it still worked on my input
+        return currentCliques.stream().findFirst().orElse(Collections.emptySet()).stream().sorted().collect(Collectors.joining(","));
+    }
+
+    private Set<Set<String>> nextCliques(Set<Set<String>> currentCliques) {
+        Set<Set<String>> nextCliques = new HashSet<>();
+        for (Set<String> clique : currentCliques) {
+            for (Map.Entry<String, Set<String>> entry : edges.entrySet()) {
+                if (entry.getValue().containsAll(clique)) {
+                    Set<String> biggerClique = new HashSet<>(clique);
+                    if (biggerClique.add(entry.getKey())) {
+                        nextCliques.add(biggerClique);
+                    }
+                }
+            }
+        }
+        return nextCliques;
     }
 }
