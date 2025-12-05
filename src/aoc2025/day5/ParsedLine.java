@@ -1,5 +1,6 @@
 package aoc2025.day5;
 
+import java.util.Comparator;
 import java.util.Optional;
 
 public class ParsedLine {
@@ -23,6 +24,19 @@ public class ParsedLine {
         }
     }
 
-    public record Range(long start, long end) { }
+    public record Range(long start, long end) implements Comparable<Range> {
+        public boolean contains(long id) {
+            return start <= id && end >= id;
+        }
+
+        @Override
+        public int compareTo(Range o) {
+            return Long.compare(this.start, o.start);
+        }
+
+        public long length() {
+            return this.end - this.start + 1;
+        }
+    }
 
 }
