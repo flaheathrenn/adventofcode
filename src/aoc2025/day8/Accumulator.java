@@ -68,7 +68,6 @@ public class Accumulator {
         final int NUMBER_OF_CONNECTIONS_TO_MAKE = 1000; // 10 for test  input
         for (int i = 1; i <= NUMBER_OF_CONNECTIONS_TO_MAKE; i++) {
             JunctionBoxPair closestPair = junctionBoxPairs_star1.removeFirst();
-//            System.out.printf("Joining %s with %s at distanceSquared %s%n", closestPair.first, closestPair.second, closestPair.distanceSquared);
             Circuit circuitOfFirst = circuits_star1.stream().filter(c -> c.contains(closestPair.first)).findAny().orElseThrow(IllegalStateException::new);
             Circuit circuitOfSecond = circuits_star1.stream().filter(c -> c.contains(closestPair.second)).findAny().orElseThrow(IllegalStateException::new);
             if (circuitOfFirst.equals(circuitOfSecond)) {
@@ -77,32 +76,24 @@ public class Accumulator {
             circuitOfFirst.addAll(circuitOfSecond); // combine circuits
             // For some reason probably related to the implementation of HashSet, can't just use circuits_star1.remove(circuitOfSecond)
             circuits_star1 = circuits_star1.stream().filter(c -> !circuitOfSecond.equals(c)).collect(Collectors.toSet());
-//            System.out.printf("Current circuits: %s%n", circuits_star1);
-//            System.out.printf("Size: %d%n", circuits_star1.size());
         }
         return String.valueOf(circuits_star1.stream().map(Circuit::junctionBoxes).map(Set::size).sorted(Comparator.reverseOrder()).mapToInt(i->i).limit(3).reduce(1, (i1, i2) -> i1 * i2));
     }
 
     public String star2() {
-        long finalX1 = 0, finalX2 = 0;
         while (!junctionBoxPairs_star2.isEmpty()) {
             JunctionBoxPair closestPair = junctionBoxPairs_star2.removeFirst();
-//            System.out.printf("Joining %s and %s%n", closestPair.first, closestPair.second);
-            finalX1 = closestPair.first.x();
-            finalX2 = closestPair.second.x();
             Circuit circuitOfFirst = circuits_star2.stream().filter(c -> c.contains(closestPair.first)).findAny().orElseThrow(IllegalStateException::new);
             Circuit circuitOfSecond = circuits_star2.stream().filter(c -> c.contains(closestPair.second)).findAny().orElseThrow(IllegalStateException::new);
-//            System.out.printf("Circuits: %s, %s%n", circuitOfFirst, circuitOfSecond);
             if (circuitOfFirst.equals(circuitOfSecond)) {
-                System.err.println("Encountered already joined pair!");
-                throw new IllegalStateException();
+                continue;
             }
             circuitOfFirst.addAll(circuitOfSecond); // combine circuits
             circuits_star2 = circuits_star2.stream().filter(c -> !circuitOfSecond.equals(c)).collect(Collectors.toSet());
-//            System.out.printf("Removing all pairs in circuit %s%n...", circuitOfFirst);
-//            System.out.printf("Pairs found: %s%n", junctionBoxPairs_star2.stream().filter(pair -> circuitOfFirst.contains(pair.first) && circuitOfFirst.contains(pair.second)).collect(Collectors.toSet()));
-            junctionBoxPairs_star2.removeIf(pair -> circuitOfFirst.contains(pair.first) && circuitOfFirst.contains(pair.second));
+            if (circuits_star2.size() == 1) {
+                return String.valueOf(closestPair.first.x() * closestPair.second.x());
+            }
         }
-        return String.valueOf(finalX1 * finalX2);
+        return "ERROR";
     }
 }
