@@ -6,20 +6,16 @@ import java.util.stream.Collectors;
 public class Accumulator {
     // State
     Set<ParsedLine.JunctionBox> junctionBoxSet = new HashSet<>();
-    SortedSet<JunctionBoxPair> junctionBoxPairs_star1 = new TreeSet<>();
-    SortedSet<JunctionBoxPair> junctionBoxPairs_star2 = new TreeSet<>();
-    Set<Circuit> circuits_star1 = new HashSet<>();
-    Set<Circuit> circuits_star2 = new HashSet<>();
+    SortedSet<JunctionBoxPair> junctionBoxPairs = new TreeSet<>();
+    Set<Circuit> circuits = new HashSet<>();
 
     // Update state from parsed line
     public Accumulator update(ParsedLine parsedLine) {
         for (ParsedLine.JunctionBox existingJunctionBox : junctionBoxSet) {
-            junctionBoxPairs_star1.add(new JunctionBoxPair(existingJunctionBox, parsedLine.junctionBox));
-            junctionBoxPairs_star2.add(new JunctionBoxPair(existingJunctionBox, parsedLine.junctionBox));
+            junctionBoxPairs.add(new JunctionBoxPair(existingJunctionBox, parsedLine.junctionBox));
         }
         junctionBoxSet.add(parsedLine.junctionBox);
-        circuits_star1.add(new Circuit(parsedLine.junctionBox));
-        circuits_star2.add(new Circuit(parsedLine.junctionBox));
+        circuits.add(new Circuit(parsedLine.junctionBox));
         return this;
     }
 
@@ -67,30 +63,31 @@ public class Accumulator {
     public String star1() {
         final int NUMBER_OF_CONNECTIONS_TO_MAKE = 1000; // 10 for test  input
         for (int i = 1; i <= NUMBER_OF_CONNECTIONS_TO_MAKE; i++) {
-            JunctionBoxPair closestPair = junctionBoxPairs_star1.removeFirst();
-            Circuit circuitOfFirst = circuits_star1.stream().filter(c -> c.contains(closestPair.first)).findAny().orElseThrow(IllegalStateException::new);
-            Circuit circuitOfSecond = circuits_star1.stream().filter(c -> c.contains(closestPair.second)).findAny().orElseThrow(IllegalStateException::new);
+            JunctionBoxPair closestPair = junctionBoxPairs.removeFirst();
+            Circuit circuitOfFirst = circuits.stream().filter(c -> c.contains(closestPair.first)).findAny().orElseThrow(IllegalStateException::new);
+            Circuit circuitOfSecond = circuits.stream().filter(c -> c.contains(closestPair.second)).findAny().orElseThrow(IllegalStateException::new);
             if (circuitOfFirst.equals(circuitOfSecond)) {
                 continue; // already connected
             }
             circuitOfFirst.addAll(circuitOfSecond); // combine circuits
             // For some reason probably related to the implementation of HashSet, can't just use circuits_star1.remove(circuitOfSecond)
-            circuits_star1 = circuits_star1.stream().filter(c -> !circuitOfSecond.equals(c)).collect(Collectors.toSet());
+            circuits = circuits.stream().filter(c -> !circuitOfSecond.equals(c)).collect(Collectors.toSet());
         }
-        return String.valueOf(circuits_star1.stream().map(Circuit::junctionBoxes).map(Set::size).sorted(Comparator.reverseOrder()).mapToInt(i->i).limit(3).reduce(1, (i1, i2) -> i1 * i2));
+        return String.valueOf(circuits.stream().map(Circuit::junctionBoxes).map(Set::size).sorted(Comparator.reverseOrder()).mapToInt(i->i).limit(3).reduce(1, (i1, i2) -> i1 * i2));
     }
 
     public String star2() {
-        while (!junctionBoxPairs_star2.isEmpty()) {
-            JunctionBoxPair closestPair = junctionBoxPairs_star2.removeFirst();
-            Circuit circuitOfFirst = circuits_star2.stream().filter(c -> c.contains(closestPair.first)).findAny().orElseThrow(IllegalStateException::new);
-            Circuit circuitOfSecond = circuits_star2.stream().filter(c -> c.contains(closestPair.second)).findAny().orElseThrow(IllegalStateException::new);
+        while (!junctionBoxPairs.isEmpty()) {
+            JunctionBoxPair closestPair = junctionBoxPairs.removeFirst();
+            Circuit circuitOfFirst = circuits.stream().filter(c -> c.contains(closestPair.first)).findAny().orElseThrow(IllegalStateException::new);
+            Circuit circuitOfSecond = circuits.stream().filter(c -> c.contains(closestPair.second)).findAny().orElseThrow(IllegalStateException::new);
             if (circuitOfFirst.equals(circuitOfSecond)) {
+                // already connected
                 continue;
             }
             circuitOfFirst.addAll(circuitOfSecond); // combine circuits
-            circuits_star2 = circuits_star2.stream().filter(c -> !circuitOfSecond.equals(c)).collect(Collectors.toSet());
-            if (circuits_star2.size() == 1) {
+            circuits = circuits.stream().filter(c -> !circuitOfSecond.equals(c)).collect(Collectors.toSet());
+            if (circuits.size() == 1) {
                 return String.valueOf(closestPair.first.x() * closestPair.second.x());
             }
         }
