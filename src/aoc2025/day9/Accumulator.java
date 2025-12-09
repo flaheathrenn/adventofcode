@@ -7,28 +7,15 @@ import aoc2025.day9.ParsedLine.Corner;
 public class Accumulator {
     // State
     List<Corner> corners = new ArrayList<>();
-    List<Corner> allEdgePoints = new ArrayList<>();
+    List<Edge> edges = new ArrayList<>();
 
     Corner previousCorner = null;
 
     // Update state from parsed line
     public Accumulator update(ParsedLine parsedLine) {
         corners.add(parsedLine.corner);
-        allEdgePoints.add(parsedLine.corner);
         if (previousCorner != null) {
-            if (previousCorner.x() == parsedLine.corner.x()) {
-                for (long l = Math.min(previousCorner.y(), parsedLine.corner.y()) + 1;
-                     l < Math.max(previousCorner.y(), parsedLine.corner.y());
-                     l++) {
-                    allEdgePoints.add(new Corner(previousCorner.x(), l));
-                }
-            } else if (previousCorner.y() == parsedLine.corner.y()) {
-                for (long l = Math.min(previousCorner.x(), parsedLine.corner.x()) + 1;
-                     l < Math.max(previousCorner.x(), parsedLine.corner.x());
-                     l++) {
-                    allEdgePoints.add(new Corner(l, previousCorner.y()));
-                }
-            }
+            edges.add(new Edge(previousCorner, parsedLine.corner));
         }
         previousCorner = parsedLine.corner;
         return this;
@@ -61,7 +48,7 @@ public class Accumulator {
                 if (area <= maxArea) {
                     continue;
                 }
-                if (allEdgePoints.stream().anyMatch(ic -> isInside(ic, r1, r2))) {
+                if (edges.stream().anyMatch(e -> e.intersectsRectangle(r1, r2))) {
                     continue;
                 }
                 // System.out.printf("Updated with %s-%s: %s%n", r1, r2, area);
@@ -71,10 +58,37 @@ public class Accumulator {
         return Long.toString(maxArea);
     }
 
-    public boolean isInside(Corner potentialInterior, Corner c1, Corner c2) {
-        return potentialInterior.x() < Math.max(c1.x(), c2.x())
-                && potentialInterior.x() > Math.min(c1.x(), c2.x())
-                && potentialInterior.y() < Math.max(c1.y(), c2.y())
-                && potentialInterior.y() > Math.min(c1.y(), c2.y());
+    public record Edge(Corner p1, Corner p2) {
+        public boolean intersectsRectangle(Corner c1, Corner c2) {
+            long rectLeft = Math.min(c1.x(), c2.x());
+            long rectRight = Math.max(c1.x(), c2.x());
+            long rectTop = Math.min(c1.y(), c2.y());
+            long rectBottom = Math.max(c1.y(), c2.y());
+            if (p1.x() == p2.x()) { // edge runs vertically
+                if (p1.x() <= rectLeft || p1.x() >= rectRight) {
+                    return false; // edge is to left or right of rectangle
+                }
+                if (p1.y() <= rectTop && p2.y() <= rectTop) {
+                    return false; // edge is above rectangle
+                }
+                if (p1.y() >= rectBottom && p2.y() >= rectBottom) {
+                    return false; // edge is below rectangle
+                }
+                return true; // edge intersects rectangle
+            } else if (p1.y() == p2.y()) { // edge runs horizontally
+                if (p1.y() <= rectTop || p1.y() >= rectBottom) {
+                    return false; // edge is below or above of rectangle
+                }
+                if (p1.x() <= rectLeft && p2.x() <= rectLeft) {
+                    return false; // edge is to left of rectangle
+                }
+                if (p1.x() >= rectRight && p2.x() >= rectRight) {
+                    return false; // edge is to right of rectangle
+                }
+                return true; // edge intersects rectangle
+            } else {
+                throw new IllegalStateException();
+            }
+        }
     }
 }
