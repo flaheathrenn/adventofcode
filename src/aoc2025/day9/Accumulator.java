@@ -49,6 +49,9 @@ public class Accumulator {
         return Long.toString(maxArea);
     }
 
+    /*
+     * NOTE: In order for star 2 to work, the first line of the input needs to be copied and added to the end of the input
+     */
     // Extract solution
     public String star2() {
         long maxArea = 0;
@@ -61,7 +64,7 @@ public class Accumulator {
                 if (allEdgePoints.stream().anyMatch(ic -> isInside(ic, r1, r2))) {
                     continue;
                 }
-                System.out.printf("Updated with %s-%s: %s%n", r1, r2, area);
+                // System.out.printf("Updated with %s-%s: %s%n", r1, r2, area);
                 maxArea = area;
             }
         }
