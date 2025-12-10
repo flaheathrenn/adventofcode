@@ -9,7 +9,8 @@ public class ParsedLine {
     // State
     short indicatorLights;
     short[] buttons;
-    String joltage;
+    short[][] buttonsForJoltage;
+    short[] joltage;
 
     // Parsing
     public ParsedLine(String line) {
@@ -17,10 +18,30 @@ public class ParsedLine {
         // indicator lights
         indicatorLights = indicatorLightsToShort(splitLine[0]);
         buttons = new short[splitLine.length - 2];
+        buttonsForJoltage = new short[splitLine.length - 2][10];
         for (int i = 1; i < splitLine.length - 1; i++) {
             buttons[i - 1] = buttonToShort(splitLine[i]);
+            buttonsForJoltage[i - 1] = buttonToJoltage(splitLine[i]);
         }
-        joltage = splitLine[splitLine.length - 1];
+        joltage = joltageToShortArray(splitLine[splitLine.length - 1]);
+    }
+
+    private short[] buttonToJoltage(String button) {
+        String[] buttonNumbers = button.substring(1, button.length() - 1).split(",");
+        short[] result = new short[buttonNumbers.length];
+        for (int i = 0; i < buttonNumbers.length; i++) {
+            result[i] = Short.parseShort(buttonNumbers[i]);
+        }
+        return result;
+    }
+
+    private short[] joltageToShortArray(String joltageString) {
+        String[] joltageNumbers = joltageString.substring(1, joltageString.length() - 1).split(",");
+        short[] result = new short[joltageNumbers.length];
+        for (int i = 0; i < joltageNumbers.length; i++) {
+            result[i] = Short.parseShort(joltageNumbers[i]);
+        }
+        return result;
     }
 
     private short buttonToShort(String button) {
