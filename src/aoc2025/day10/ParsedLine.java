@@ -9,39 +9,40 @@ public class ParsedLine {
     // State
     short indicatorLights;
     short[] buttons;
-    short[][] buttonsForJoltage;
-    short[] joltage;
+
+    Vector joltageGoal;
+    Vector[] joltageButtons;
 
     // Parsing
     public ParsedLine(String line) {
         String[] splitLine = line.split(" ");
         // indicator lights
         indicatorLights = indicatorLightsToShort(splitLine[0]);
+        joltageGoal = joltageAsVector(splitLine[splitLine.length - 1]);
         buttons = new short[splitLine.length - 2];
-        buttonsForJoltage = new short[splitLine.length - 2][10];
+        joltageButtons = new Vector[splitLine.length - 2];
         for (int i = 1; i < splitLine.length - 1; i++) {
             buttons[i - 1] = buttonToShort(splitLine[i]);
-            buttonsForJoltage[i - 1] = buttonToJoltage(splitLine[i]);
+            joltageButtons[i - 1] = buttonAsVector(splitLine[i], joltageGoal.elements().length);
         }
-        joltage = joltageToShortArray(splitLine[splitLine.length - 1]);
     }
 
-    private short[] buttonToJoltage(String button) {
-        String[] buttonNumbers = button.substring(1, button.length() - 1).split(",");
-        short[] result = new short[buttonNumbers.length];
-        for (int i = 0; i < buttonNumbers.length; i++) {
-            result[i] = Short.parseShort(buttonNumbers[i]);
+    private Vector joltageAsVector(String s) {
+        String[] splits = s.substring(1, s.length() - 1).split(",");
+        int[] vectorBacking = new int[splits.length];
+        for (int i = 0; i < splits.length; i++) {
+            vectorBacking[i] = Integer.parseInt(splits[i]);
         }
-        return result;
+        return new Vector(vectorBacking);
     }
 
-    private short[] joltageToShortArray(String joltageString) {
-        String[] joltageNumbers = joltageString.substring(1, joltageString.length() - 1).split(",");
-        short[] result = new short[joltageNumbers.length];
-        for (int i = 0; i < joltageNumbers.length; i++) {
-            result[i] = Short.parseShort(joltageNumbers[i]);
+    private Vector buttonAsVector(String s, int vectorLength) {
+        String[] splits = s.substring(1, s.length() - 1).split(",");
+        int[] vectorBacking = new int[vectorLength];
+        for (String index : splits) {
+            vectorBacking[Integer.parseInt(index)] = 1;
         }
-        return result;
+        return new Vector(vectorBacking);
     }
 
     private short buttonToShort(String button) {

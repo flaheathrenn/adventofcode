@@ -1,10 +1,6 @@
 package aoc2025.day10;
 
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-import java.util.stream.Collectors;
+import java.util.*;
 //import java.util.stream.Collectors;
 
 public class Accumulator {
@@ -15,7 +11,7 @@ public class Accumulator {
     // Update state from parsed line
     public Accumulator update(ParsedLine parsedLine) {
         star1sol += calculateStarOneButtonPresses(parsedLine.buttons, parsedLine.indicatorLights);
-        star2sol += calculateStarTwoButtonPresses(parsedLine.buttonsForJoltage, parsedLine.joltage);
+        star2sol += calculateStarTwoButtonPresses(parsedLine.joltageButtons, parsedLine.joltageGoal);
         return this;
     }
 
@@ -43,47 +39,44 @@ public class Accumulator {
         throw new IllegalStateException();
     }
 
-    private long calculateStarTwoButtonPresses(short[][] buttons, short[] joltageGoal) {
+    private long calculateStarTwoButtonPresses(Vector[] joltageButtons, Vector joltageGoal) {
+        SortedSet<Vector> buttons = new TreeSet<>(List.of(joltageButtons));
+        long result = calculateStarTwoButtonPresses(buttons, joltageGoal);
+        System.out.println("Star 2 result: " + result);
+        return result;
+    }
 
-        // Initialise ButtonSet
-        // Initialise button definitions
-        List<ButtonSet.ButtonDefinition> buttonDefinitionsList = new ArrayList<>(buttons.length);
-        for (int i = 0; i < buttons.length; i++) {
-            buttonDefinitionsList.add(new ButtonSet.ButtonDefinition());
+    private static long calculateStarTwoButtonPresses(SortedSet<Vector> parts, Vector goal) {
+        if (goal.isZeroVector()) {
+            return 0L; // no more button presses required
         }
-        // Each element in the joltage goal array represents a constraint on buttons
-        for (int i = 0; i < joltageGoal.length; i++) {
-            // Make list of buttons that affect this particular element
-            List<Integer> buttonIndexesForJoltageElement = new ArrayList<>(joltageGoal.length);
-            for (int j = 0; j < buttons.length; j++) {
-                for (short buttonAffects : buttons[j]) {
-                    if (buttonAffects == i) {
-                        buttonIndexesForJoltageElement.add(j);
-                    }
-                }
-            }
-            // Now add constraints to these buttons
-            for (Integer buttonIndex : buttonIndexesForJoltageElement) {
-                buttonDefinitionsList.get(buttonIndex).addConstraint(new ButtonSet.ButtonDefinition.Constraint(
-                        buttonIndexesForJoltageElement.stream().filter(value -> value != buttonIndex).collect(Collectors.toList()),
-                        joltageGoal[i]
-                ));
-            }
+        if (parts.isEmpty()) {
+            return Integer.MAX_VALUE;
         }
 
-        ButtonSet buttonSet = new ButtonSet(buttonDefinitionsList, buttonDefinitionsList);
-        ButtonSet solution = buttonSet.solve();
-        long buttonPresses = 0;
-        if (solution == null) {
-            System.err.println("No solution found");
-        } else {
-            System.out.printf("Found solution: %s%n", solution.buttonDefinitions().stream().map(bd -> bd.fixedValue).map(String::valueOf).collect(Collectors.joining(",", "{", "}")));
-            for (int i = 0; i < solution.buttonDefinitions().size(); i++) {
-                buttonPresses += solution.buttonDefinitions().get(i).fixedValue;
+        Vector totalParts = parts.stream().reduce(new Vector(new int[goal.elements().length]), Vector::add);
+        for (int i = 0; i < totalParts.elements().length; i++) {
+            if (totalParts.elements()[i] == 1) {
+                // only one part-vector contributes to this part of joltage
+                int finalI = i;
+                Optional<Vector> contributingPart = parts.stream().filter(part -> part.elements()[finalI] == 1).findFirst();
+                return contributingPart.map(part -> {
+                    Vector.VectorDivisionResult divisionResult = goal.divideBy(part);
+                    SortedSet<Vector> otherParts = new TreeSet<>(parts);
+                    otherParts.remove(part);
+                    return divisionResult.result() + calculateStarTwoButtonPresses(otherParts, divisionResult.remainder());
+                }).orElse((long) Integer.MAX_VALUE);
             }
         }
 
-        return buttonPresses;
+        Vector widestVector = parts.removeLast();
+        Vector.VectorDivisionResult divisionResult = goal.divideBy(widestVector);
+        if (divisionResult.result() == 0) {
+            return calculateStarTwoButtonPresses(parts, goal);
+        }
+        long answerIncludingWidestVector = divisionResult.result() + calculateStarTwoButtonPresses(new TreeSet<>(parts), divisionResult.remainder());
+        long answerIgnoringWidestVector = calculateStarTwoButtonPresses(new TreeSet<>(parts), goal);
+        return Long.min(answerIncludingWidestVector, answerIgnoringWidestVector);
     }
 
 
