@@ -71,15 +71,14 @@ public class Accumulator {
             }
         }
 
-        ButtonSet buttonSet = new ButtonSet(buttonDefinitionsList);
+        ButtonSet buttonSet = new ButtonSet(buttonDefinitionsList, buttonDefinitionsList);
         ButtonSet solution = buttonSet.solve();
         long buttonPresses = 0;
         if (solution == null) {
-            System.out.println("No solution found");
+            System.err.println("No solution found");
         } else {
-            System.out.println("Found solution:");
+            System.out.printf("Found solution: %s%n", solution.buttonDefinitions().stream().map(bd -> bd.fixedValue).map(String::valueOf).collect(Collectors.joining(",", "{", "}")));
             for (int i = 0; i < solution.buttonDefinitions().size(); i++) {
-                System.out.printf("Push button %d %d times%n", i, solution.buttonDefinitions().get(i).fixedValue);
                 buttonPresses += solution.buttonDefinitions().get(i).fixedValue;
             }
         }

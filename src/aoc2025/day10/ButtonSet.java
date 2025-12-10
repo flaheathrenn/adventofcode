@@ -1,11 +1,10 @@
 package aoc2025.day10;
 
 import java.awt.*;
-import java.util.ArrayList;
+import java.util.*;
 import java.util.List;
-import java.util.Optional;
 
-public record ButtonSet(List<ButtonDefinition> buttonDefinitions) {
+public record ButtonSet(List<ButtonDefinition> initialButtonDefinitions, List<ButtonDefinition> buttonDefinitions) {
 
     static void main(String[] args) {
         // (3) (1,3) (2) (2,3) (0,2) (0,1) {3,5,4,7}
@@ -29,7 +28,7 @@ public record ButtonSet(List<ButtonDefinition> buttonDefinitions) {
         buttonDefinitionsList.get(1).addConstraint(new ButtonDefinition.Constraint(List.of(0,3), (short) 7));
         buttonDefinitionsList.get(3).addConstraint(new ButtonDefinition.Constraint(List.of(0,1), (short) 7));
 
-        ButtonSet buttonSet = new ButtonSet(buttonDefinitionsList);
+        ButtonSet buttonSet = new ButtonSet(buttonDefinitionsList, buttonDefinitionsList);
         ButtonSet solution = buttonSet.solve();
         if (solution == null) {
             System.out.println("No solution found");
@@ -44,7 +43,19 @@ public record ButtonSet(List<ButtonDefinition> buttonDefinitions) {
     public ButtonSet solve() {
         Optional<ButtonDefinition> unfixed = buttonDefinitions.stream().filter(b -> !b.hasFixedValue).findFirst();
         if (unfixed.isEmpty()) {
-            // all buttons have fixed values
+            // all buttons have fixed values, so check solution
+            for (int index = 0; index < initialButtonDefinitions.size(); index++) {
+                short valueAtIndex = buttonDefinitions.get(index).fixedValue;
+                for (ButtonDefinition.Constraint initialConstraint : initialButtonDefinitions.get(index).constraints) {
+                    short sumOfConstraintValues = valueAtIndex;
+                    for (int referencedIndex : initialConstraint.otherButtonIndexes) {
+                        sumOfConstraintValues += buttonDefinitions.get(referencedIndex).fixedValue;
+                    }
+                    if (initialConstraint.sum != sumOfConstraintValues) {
+                        return null; // values don't meet constraint
+                    }
+                }
+            }
             return this;
         }
         ButtonDefinition toFix = unfixed.get();
@@ -68,50 +79,37 @@ public record ButtonSet(List<ButtonDefinition> buttonDefinitions) {
         List<ButtonDefinition> newButtonDefinitions = new ArrayList<>(buttonDefinitions);
         ButtonDefinition toFix = newButtonDefinitions.get(index);
         if (toFix.hasFixedValue) {
-            System.out.printf("Trying to fix button %d with already fixed value %d%n", index, toFix.fixedValue);
-            return null; // can't do it
+            throw new IllegalArgumentException(); // shouldn't be trying this
         }
-        System.out.printf("Fixing button %d to value %d%n", index, value);
+        // System.out.printf("Fixing button %d to value %d%n", index, value);
         newButtonDefinitions.set(index, toFix.fixValue(value));
-        for (int i = 0; i < newButtonDefinitions.size(); i++) {
-            if (i == index) {
-                continue;
-            }
-            ButtonDefinition buttonI = newButtonDefinitions.get(i);
-            if (!buttonI.hasFixedValue) {
-                ButtonDefinition newButtonI = new ButtonDefinition();
-                for (ButtonDefinition.Constraint oldC : buttonI.constraints) {
-                    ButtonDefinition.Constraint newC = oldC.fixButton(index, value);
-                    if (newC == null) {
-                        System.out.printf("Value invalid%n");
-                        return null; // can't make this fix
-                    }
-                    newButtonI.addConstraint(newC);
+
+        ButtonSet updatedButtonSet = new ButtonSet(buttonDefinitions, newButtonDefinitions);
+
+        List<Integer> allAffectedIndices = toFix.constraints.stream().map(ButtonDefinition.Constraint::otherButtonIndexes).flatMap(List::stream).toList();
+        for (Integer affectedIndex : allAffectedIndices) {
+            ButtonDefinition toFixAffected = newButtonDefinitions.get(affectedIndex);
+            ButtonDefinition newAffected = new ButtonDefinition();
+            for (ButtonDefinition.Constraint oldConstraint : toFixAffected.constraints) {
+                ButtonDefinition.Constraint newConstraint = oldConstraint.fixButton(index, value);
+                if (newConstraint == null) {
+                    return null; // can't do it
                 }
-                newButtonDefinitions.set(i, newButtonI);
+                newAffected.addConstraint(newConstraint);
+            }
+            newButtonDefinitions.set(affectedIndex, newAffected);
+            updatedButtonSet = new ButtonSet(buttonDefinitions, newButtonDefinitions);
+            List<ButtonDefinition.Constraint> emptyConstraints = newAffected.constraints.stream().filter(c -> c.otherButtonIndexes.isEmpty()).toList();
+            if (!emptyConstraints.isEmpty()) {
+                // can fix value
+                short newValue = emptyConstraints.getFirst().sum;
+                if (emptyConstraints.stream().map(ButtonDefinition.Constraint::sum).anyMatch(s -> newValue != s)) {
+                    return null; // invalid constraints
+                }
+                updatedButtonSet = updatedButtonSet.fixValue(affectedIndex, newValue);
             }
         }
-        ButtonSet updatedButtonSet = new ButtonSet(newButtonDefinitions);
-        for (int i = 0; i < updatedButtonSet.buttonDefinitions.size(); i++) {
-            if (i == index) {
-                continue;
-            }
-            ButtonDefinition bd = updatedButtonSet.buttonDefinitions.get(i);
-            System.out.printf("Checking button definition index %d def %s%n", index, bd);
-            if (bd.hasFixedValue) {
-                continue;
-            }
-            for (ButtonDefinition.Constraint c : bd.constraints) {
-                if (c.otherButtonIndexes.isEmpty()) {
-                    System.out.printf("Button %d now has fixed value %d, fixing%n", i, c.sum);
-                    ButtonSet withNewFixedValue = updatedButtonSet.fixValue(i, c.sum);
-                    if (withNewFixedValue == null) {
-                        return null; // invalid
-                    }
-                    updatedButtonSet = withNewFixedValue;
-                }
-            }
-        }
+
         return updatedButtonSet;
     }
 
