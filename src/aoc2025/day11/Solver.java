@@ -14,5 +14,7 @@ public class Solver {
             return accumulator.update(parsedLine);
         }, new Accumulator());
         System.out.println("Star 1 solution: " + result.star1());
+        System.out.println("Star 2 solution: " + result.star2());
+
     }
 }
