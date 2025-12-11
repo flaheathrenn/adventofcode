@@ -74,9 +74,12 @@ public class Accumulator {
         if (divisionResult.result() == 0) {
             return calculateStarTwoButtonPresses(parts, goal);
         }
-        long answerIncludingWidestVector = divisionResult.result() + calculateStarTwoButtonPresses(new TreeSet<>(parts), divisionResult.remainder());
-        long answerIgnoringWidestVector = calculateStarTwoButtonPresses(new TreeSet<>(parts), goal);
-        return Long.min(answerIncludingWidestVector, answerIgnoringWidestVector);
+        long minimum = Integer.MAX_VALUE;
+        for (int i = 0; i <= divisionResult.result(); i++) {
+            long thisAnswer = i + calculateStarTwoButtonPresses(new TreeSet<>(parts), goal.subtract(widestVector.times(i)));
+            minimum = Long.min(minimum, thisAnswer);
+        }
+        return minimum;
     }
 
 

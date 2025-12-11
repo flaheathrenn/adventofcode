@@ -4,22 +4,35 @@ import java.util.*;
 
 public record Vector(int[] elements, int width) implements Comparable<Vector> {
     static void main(String[] args) {
-// (0,1,2,3,4) (0,1,2,3,4,5) (3,5,6) (0,2,4,5) (1,2,5) (3) (0,3,4,5,6) (1,2,4,6) {48,163,178,40,179,32,133}
-        Vector bigVector = new Vector(new int[] { 48, 163, 178, 40, 179, 32, 133 });
-        List<Vector> parts = List.of(
-                new Vector(new int[] { 1, 1, 1, 1, 1, 0, 0}),
-                new Vector(new int[] { 1, 1, 1, 1, 1, 1, 0}),
-                new Vector(new int[] { 0, 0, 0, 1, 0, 1, 1}),
-                new Vector(new int[] { 1, 0, 1, 0, 1, 1, 0}),
-                new Vector(new int[] { 0, 1, 1, 0, 0, 1, 0}),
-                new Vector(new int[] { 0, 0, 0, 1, 0, 0, 0}),
-                new Vector(new int[] { 1, 0, 0, 1, 1, 1, 1}),
-                new Vector(new int[] { 0, 1, 1, 0, 1, 0, 1}) 
-        );
+//        Vector v = new Vector(new int[] { 2, 5, 8 });
+//        Matrix m = new Matrix(new int[][] {
+//                { 0, 1, 0 },
+//                { 1, 0, 1 },
+//                { 1, 1, 0 }
+//        });
+//        System.out.println(v.multiply(m));
+//
+//        Vector v1 = new Vector(new int[] { 13, 10, 5 });
+//        System.out.println(v1.multiply(m.inverse()));
 
-//        System.out.println(bigVector.divideBy(smallVector));
-//        System.out.println(bigVector.divideBy(otherSmallVector));
-        System.out.println(calculateStarTwoButtonPresses(new TreeSet<>(parts), bigVector));
+        Vector bigVector = new Vector(new int[] {222,258,228,230,246,216,68,67,272,243});
+        List<Vector> parts = List.of(
+                new Vector(new int[] { 0, 1, 0, 0, 1, 0, 1, 0, 1, 1}),
+                new Vector(new int[] { 1, 1, 1, 1, 0, 0, 0, 0, 1, 1}),
+                new Vector(new int[] { 0, 0, 0, 0, 1, 0, 0, 1, 1, 0}),
+                new Vector(new int[] { 0, 1, 1, 1, 0, 1, 0, 1, 0, 0}),
+                new Vector(new int[] { 1, 1, 1, 0, 1, 0, 1, 1, 1, 0}),
+                new Vector(new int[] { 1, 0, 0, 0, 1, 0, 1, 0, 0, 1}),
+                new Vector(new int[] { 0, 1, 0, 0, 0, 1, 0, 0, 1, 0}),
+                new Vector(new int[] { 0, 1, 1, 1, 0, 1, 1, 1, 1, 0}),
+                new Vector(new int[] { 1, 1, 1, 1, 1, 1, 0, 0, 1, 1}),
+                new Vector(new int[] { 1, 1, 1, 1, 1, 1, 0, 1, 1, 1}),
+                new Vector(new int[] { 0, 1, 1, 1, 0, 1, 1, 1, 1, 1}),
+                new Vector(new int[] { 0, 1, 0, 1, 0, 0, 0, 0, 1, 1})
+        );
+        Matrix m = new Matrix(parts.toArray(new Vector[0]));
+        System.out.println(bigVector.multiply(m.transpose()));
+//        System.out.println(calculateStarTwoButtonPresses(new TreeSet<>(parts), bigVector));
     }
 
     private static long calculateStarTwoButtonPresses(SortedSet<Vector> parts, Vector goal) {
@@ -31,6 +44,8 @@ public record Vector(int[] elements, int width) implements Comparable<Vector> {
             System.out.println("Parts is empty, recursion bottoming out");
             return Integer.MAX_VALUE;
         }
+
+        // Deal quickly with case where only one part-vector contains 1 at a position
         Vector totalParts = parts.stream().reduce(new Vector(new int[goal.elements.length]), Vector::add);
         for (int i = 0; i < totalParts.elements.length; i++) {
             if (totalParts.elements[i] == 1) {
@@ -53,12 +68,12 @@ public record Vector(int[] elements, int width) implements Comparable<Vector> {
             System.out.println("No button presses here, skipping straight to making " + goal + " from " + parts);
             return calculateStarTwoButtonPresses(parts, goal);
         }
-        System.out.println("Making remainder " + divisionResult.remainder + " from parts " + parts);
-        long answerIncludingWidestVector = divisionResult.result() + calculateStarTwoButtonPresses(new TreeSet<>(parts), divisionResult.remainder());
-        System.out.println("Trying to just make " + goal + " from " + parts);
-        long answerIgnoringWidestVector = calculateStarTwoButtonPresses(new TreeSet<>(parts), goal);
-        System.out.println("Comparing answers " + answerIncludingWidestVector + " and " + answerIgnoringWidestVector);
-        return Long.min(answerIncludingWidestVector, answerIgnoringWidestVector);
+        long minimum = Integer.MAX_VALUE;
+        for (int i = divisionResult.result(); i >= 0; i--) {
+            long thisAnswer = i + calculateStarTwoButtonPresses(new TreeSet<>(parts), goal.subtract(widestVector.times(i)));
+            minimum = Long.min(minimum, thisAnswer);
+        }
+        return minimum;
     }
 
     public Vector(int[] elements) {
@@ -136,5 +151,18 @@ public record Vector(int[] elements, int width) implements Comparable<Vector> {
     @Override
     public String toString() {
         return Arrays.toString(elements);
+    }
+
+    public Vector multiply(Matrix m) {
+        if (this.elements.length != m.elements().length) {
+            throw new IllegalArgumentException();
+        }
+        int[] result = new int[this.elements.length];
+        for (int i = 0; i < this.elements.length; i++) {
+            for (int j = 0; j < m.elements().length; j++) {
+                result[i] += this.elements[j] * m.elements()[j][i];
+            }
+        }
+        return new Vector(result);
     }
 }
