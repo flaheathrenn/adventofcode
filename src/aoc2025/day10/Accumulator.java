@@ -40,10 +40,12 @@ public class Accumulator {
     }
 
     private long calculateStarTwoButtonPresses(Vector[] joltageButtons, Vector joltageGoal) {
-        SortedSet<Vector> buttons = new TreeSet<>(List.of(joltageButtons));
-        long result = calculateStarTwoButtonPresses(buttons, joltageGoal);
-        System.out.println("Star 2 result: " + result);
-        return result;
+//        SortedSet<Vector> buttons = new TreeSet<>(List.of(joltageButtons));
+//        long result = calculateStarTwoButtonPresses(buttons, joltageGoal);
+//        System.out.println("Star 2 result: " + result);
+//        return result;
+
+        return 0L;
     }
 
     private static long calculateStarTwoButtonPresses(SortedSet<Vector> parts, Vector goal) {

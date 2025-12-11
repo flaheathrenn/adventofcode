@@ -1,4 +1,8 @@
 bin/
+lib/
 .vscode/
 **/testinput.txt
 **/input.txt
+*.iml
+out/
+.idea/
